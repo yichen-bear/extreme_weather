@@ -1,5 +1,5 @@
 module.exports = {
     projects: [
-        './shopping', 
+        './extreme_weather', 
     ]
 }
