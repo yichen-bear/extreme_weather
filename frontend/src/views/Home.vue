@@ -1,7 +1,5 @@
 <template>
-  <BackgroundCanvas />
-
-  <main id="app">
+  <div id="app">
     <transition name="fade" mode="out-in">
       <div v-if="currentPage === 'home'" key="home" class="hero">
         <div class="sdg-badge">
@@ -20,7 +18,7 @@
         </div>
 
         <div class="cta-group">
-          <button class="cta-btn dashboard" @click="currentPage = 'dashboard'">
+          <router-link to="/dashboard" class="cta-btn dashboard">
             <div class="btn-icon">◉</div>
             <div class="btn-label">Explore</div>
             <div class="btn-title">Dashboard</div>
@@ -29,9 +27,9 @@
               極端氣候事件<br />
               互動資料儀表板
             </div>
-          </button>
+          </router-link>
 
-          <button class="cta-btn game" @click="currentPage = 'game'">
+          <router-link to="/gamehome" class="cta-btn game">
             <div class="btn-icon">▲</div>
             <div class="btn-label">Play</div>
             <div class="btn-title">Ascent</div>
@@ -40,37 +38,15 @@
               穿越氣候時代
             </div>
             <span class="btn-arrow">→</span>
-          </button>
+          </router-link>
         </div>
-      </div>
-
-      <div v-else key="content" class="hero">
-        <div class="sdg-badge">
-          <span class="sdg-dot"></span>
-          {{ currentPage.toUpperCase() }}
-        </div>
-        <h1 class="title" style="font-size: 80px">
-          {{ currentPage === 'game' ? 'Ascent' : 'Dashboard' }}
-        </h1>
-        <p class="subtitle">此頁面內容正在建置中，敬請期待...</p>
-        <button
-          class="cta-btn"
-          @click="currentPage = 'home'"
-          style="width: 160px; margin-top: 30px; padding: 20px"
-        >
-          <div class="btn-title" style="font-size: 20px">← Back</div>
-        </button>
       </div>
     </transition>
-  </main>
-
-  <StatTicker />
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import BackgroundCanvas from '../components/BgCanvas.vue'
-import StatTicker from '../components/StatTicker.vue'
 
 // 控制目前的頁面狀態
 const currentPage = ref('home')

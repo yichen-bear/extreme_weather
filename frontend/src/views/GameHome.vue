@@ -1,8 +1,8 @@
 <template>
   <div class="game-overlay">
-    <button class="back-to-portal" @click="$emit('back')">
+    <router-link to="/" class="back-to-portal" >
       <span class="arrow">←</span> EXIT PORTAL
-    </button>
+    </router-link>
 
     <div class="game-menu-container">
       <header class="game-header">
