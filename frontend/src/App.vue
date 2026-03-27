@@ -1,6 +1,8 @@
 <template>
   <BackgroundCanvas />
 
+  <Navbar />
+
   <main id="app">
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
@@ -15,6 +17,7 @@
 <script setup>
 import BackgroundCanvas from './components/BgCanvas.vue'
 import StatTicker from './components/StatTicker.vue'
+import Navbar from './components/Navbar.vue';
 </script>
 
 <style>
@@ -28,6 +31,7 @@ import StatTicker from './components/StatTicker.vue'
   --c-muted: #627d91;
   --font-disp: 'Bebas Neue', sans-serif;
   --font-body: 'DM Sans', sans-serif;
+  --nav-height: 50px;
 }
 
 body {
