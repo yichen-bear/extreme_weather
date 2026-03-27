@@ -1,9 +1,5 @@
 <template>
   <div class="game-overlay">
-    <router-link to="/" class="back-btn">
-      <span class="back-arrow">←</span>
-      回首頁
-    </router-link>
 
     <div class="game-menu-container">
       <!-- Header -->
@@ -177,6 +173,7 @@ const startGame = () => {
   font-family: var(--font-body);
   color: #fff;
   animation: fadeIn 1s ease-out;
+  padding-top: 50px;
 }
 
 /* ===== HEADER ===== */
