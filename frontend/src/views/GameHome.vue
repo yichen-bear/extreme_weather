@@ -157,7 +157,6 @@ const startGame = () => {
 
 <style scoped>
 /* ===== CSS VARIABLES ===== */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
 .game-overlay {
   --c-bg: #080c10;
   --c-surface: rgba(255, 255, 255, 0.03);
