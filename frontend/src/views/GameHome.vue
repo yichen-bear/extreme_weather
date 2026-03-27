@@ -12,15 +12,30 @@
           <span class="title-climate">CLIMATE</span>
           <span class="title-ascent">ASCENT</span>
         </h1>
-        <p class="game-subtitle">垂直極限：在氣候變遷的洪流中向上攀登</p>
+        <p class="game-subtitle">登峰危機：在氣候變遷的洪流中向上攀登</p>
         <div class="title-underline"></div>
       </header>
+
+      
+      <!-- Central Start Button -->
+      <div class="center-col">
+        <button class="start-btn" @click="startGame">
+          <div class="orbit orbit-1"></div>
+          <div class="orbit orbit-2"></div>
+          <div class="start-core">
+            <div class="start-icon">▲</div>
+            <span class="play-text">START</span>
+            <span class="play-sub">開始攀登</span>
+          </div>
+          <div class="start-ring"></div>
+        </button>
+      </div>
 
       <!-- Menu Grid -->
       <div class="menu-grid">
         <!-- World Map card -->
         <button
-          class="menu-card map-card"
+          class="menu-card"
           @click="currentSubView = 'map'"
           :class="{ active: currentSubView === 'map' }"
         >
@@ -43,23 +58,7 @@
               <p class="card-desc">探索全球極端氣候熱點</p>
             </div>
           </div>
-          <div class="card-tag">→</div>
         </button>
-
-        <!-- Central Start Button -->
-        <div class="center-col">
-          <button class="start-btn" @click="startGame">
-            <div class="orbit orbit-1"></div>
-            <div class="orbit orbit-2"></div>
-            <div class="start-core">
-              <div class="start-icon">▲</div>
-              <span class="play-text">START</span>
-              <span class="play-sub">開始攀登</span>
-            </div>
-            <div class="start-ring"></div>
-          </button>
-          <div class="start-hint">PRESS TO ASCEND</div>
-        </div>
 
         <!-- Rules card -->
         <button
@@ -69,11 +68,6 @@
         >
           <div class="card-glow rules-glow"></div>
           <div class="card-inner rules-inner">
-            <div class="card-text" style="text-align: left">
-              <span class="card-eyebrow">MECHANICS</span>
-              <h2 class="card-heading">生存規則</h2>
-              <p class="card-desc">掌握極端天氣求生法則</p>
-            </div>
             <div class="card-icon-wrap">
               <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                 <rect
@@ -90,8 +84,12 @@
                 <line x1="12" y1="22" x2="19" y2="22" stroke="currentColor" stroke-width="1.2" />
               </svg>
             </div>
+            <div class="card-text">
+              <span class="card-eyebrow">MECHANICS</span>
+              <h2 class="card-heading">生存規則</h2>
+              <p class="card-desc">掌握極端天氣求生法則</p>
+            </div>
           </div>
-          <div class="card-tag">→</div>
         </button>
       </div>
 
@@ -170,7 +168,7 @@ const startGame = () => {
 
   position: fixed;
   inset: 0;
-  background: var(--c-bg);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,7 +181,7 @@ const startGame = () => {
 
 /* ===== HEADER ===== */
 .game-header {
-  margin-bottom: 52px;
+  margin-bottom: 30px;
 }
 .back-btn {
   position: absolute;
@@ -229,6 +227,7 @@ const startGame = () => {
 }
 
 .game-title {
+  padding-top: 30px;
   font-family: var(--font-disp);
   font-size: clamp(48px, 8vw, 90px);
   margin: 0;
@@ -238,12 +237,13 @@ const startGame = () => {
   align-items: center;
 }
 .title-climate {
-  font-size: 90px;
+  font-size: 100px;
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 12px;
+  margin-bottom: 10px;
 }
 .title-ascent {
-  font-size: 110px;
+  font-size: 100px;
   color: var(--c-warn);
   letter-spacing: 8px;
   text-shadow:
@@ -266,24 +266,38 @@ const startGame = () => {
 
 /* ===== MENU GRID ===== */
 .menu-grid {
-  display: grid;
-  grid-template-columns: 1fr 280px 1fr;
-  gap: 28px;
-  margin: 40px 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
+  gap: 20px;
+  margin: 40px auto;
   align-items: center;
+  width: 100%;
+  max-width: 1200px;
 }
 
 /* ===== MENU CARDS ===== */
 .menu-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   position: relative;
   background: var(--c-surface);
   border: 1px solid rgba(255, 255, 255, 0.534);
   border-radius: 8px;
-  padding: 28px 24px;
+  padding: 15px 12px;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  width: 100%;
+  max-width: 320px;
+  min-width: 120px;
+  min-height: 100px;
+  justify-self: center;
+  flex: 1;
 }
 .menu-card:hover,
 .menu-card.active {
@@ -310,11 +324,13 @@ const startGame = () => {
 
 .card-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
+  width: 100%;
 }
 .rules-inner {
-  flex-direction: row-reverse;
+  flex-direction: column;
 }
 
 .card-icon-wrap {
@@ -327,6 +343,7 @@ const startGame = () => {
 }
 .card-text {
   color: rgb(230, 229, 229);
+  text-align: center;
 }
 .card-eyebrow {
   font-size: 9px;
@@ -669,11 +686,20 @@ const startGame = () => {
   .menu-grid {
     grid-template-columns: 1fr; /* 改為單欄排列 */
     justify-items: center;
-    gap: 30px;
+    gap: 10px;
   }
 
   .start-btn-wrapper {
     order: -1; /* 將開始按鈕移到最上方 */
+  }
+
+  .start-btn {
+    width: 160px;
+    height: 160px;
+  }
+
+  .card-heading {
+    font-size: 16px;
   }
 
   .menu-card {
@@ -690,6 +716,10 @@ const startGame = () => {
     top: 15px;
     left: 15px;
     font-size: 11px;
+  }
+
+  .play-text {
+    font-size: 35px;
   }
 }
 </style>
