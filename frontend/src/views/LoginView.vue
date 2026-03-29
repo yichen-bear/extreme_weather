@@ -11,7 +11,7 @@
           <label>USERNAME</label>
           <input v-model="formData.username" type="text" placeholder="輸入玩家名稱" required />
         </div>
-        
+
         <div class="input-group">
           <label>EMAIL</label>
           <input v-model="formData.email" type="email" placeholder="輸入電子郵件" required />
@@ -24,6 +24,10 @@
 
         <button type="submit" class="submit-btn">
           {{ isLogin ? '進入系統' : '建立帳號' }}
+        </button>
+
+        <button type="button" class="guest-btn" @click="handleGuestLogin">
+          以訪客身分快速體驗
         </button>
       </form>
 
@@ -47,17 +51,17 @@ const isLogin = ref(true)
 const formData = reactive({
   username: '',
   email: '',
-  password: ''
+  password: '',
 })
 
 const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
   try {
     const res = await axios.post(`http://localhost:3000${endpoint}`, formData)
-    
+
     if (isLogin.value) {
       // 登入成功：存入 Token 並導向遊戲頁面
-      authStore.login(res.data.token, res.data.username);
+      authStore.login(res.data.token, res.data.username)
       alert('登入成功！')
       router.push('/gamehome')
     } else {
@@ -68,6 +72,12 @@ const handleSubmit = async () => {
     alert(err.response?.data?.message || '操作失敗')
   }
 }
+
+const handleGuestLogin = () => {
+  authStore.guestLogin();
+  alert('已使用訪客身分登入，部分進度可能無法永久儲存');
+  router.push('/gamehome');
+};
 </script>
 
 <style scoped>
@@ -145,7 +155,9 @@ const handleSubmit = async () => {
   font-weight: bold;
   letter-spacing: 2px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   margin-top: 10px;
 }
 
@@ -166,5 +178,23 @@ const handleSubmit = async () => {
 
 .switch-btn:hover {
   color: #00e5ff;
+}
+
+.guest-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.guest-btn:hover {
+  color: #fff;
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.05);
 }
 </style>

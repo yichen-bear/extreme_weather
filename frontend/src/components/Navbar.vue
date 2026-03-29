@@ -14,7 +14,7 @@
           
           <template v-else>
             <div class="user-info">
-              <span class="user-status">{{ authStore.username }}</span>
+              <span class="user-status">{{ authStore.isGuest ? '🚧 訪客' : authStore.username }}</span>
               <div class="user-avatar"></div>
             </div>
             <button class="btn-nav logout" @click="handleLogout">登出</button>
