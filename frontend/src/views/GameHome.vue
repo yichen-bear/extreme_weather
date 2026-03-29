@@ -691,8 +691,8 @@ const startGame = () => {
   }
 
   .start-btn {
-    width: 160px;
-    height: 160px;
+    width: 200px;
+    height: 200px;
   }
 
   .card-heading {
