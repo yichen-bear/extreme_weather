@@ -2,7 +2,7 @@
   <div class="auth-overlay">
     <div class="auth-card">
       <div class="auth-header">
-        <h2 class="auth-title">{{ isLogin ? 'PLAYER LOGIN' : 'NEW CLIMBER' }}</h2>
+        <h2 class="auth-title">{{ isLogin ? '登入' : '註冊' }}</h2>
         <div class="title-line"></div>
       </div>
 
@@ -43,10 +43,11 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { authStore } from '../stores/user'
 
 const router = useRouter()
+const route = useRoute()
 const isLogin = ref(true)
 const formData = reactive({
   username: '',
@@ -54,30 +55,44 @@ const formData = reactive({
   password: '',
 })
 
+const handleRedirect = () => {
+  const target = route.query.redirect // 取得網址列的 ?redirect=XXX
+  
+  if (target === 'play') {
+    router.push('/play') 
+  } else if (target === 'map') {
+    // 回到 GameHome 並帶上 view=map 參數
+    router.push({ path: '/gamehome', query: { view: 'map' } })
+  } else {
+    router.push('/gamehome') 
+  }
+}
+
 const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
   try {
     const res = await axios.post(`http://localhost:3000${endpoint}`, formData)
-
+    
     if (isLogin.value) {
-      // 登入成功：存入 Token 並導向遊戲頁面
+      // 登入成功
       authStore.login(res.data.token, res.data.username)
       alert('登入成功！')
-      router.push('/gamehome')
+      handleRedirect() // 執行跳轉
     } else {
       alert('註冊成功，請登入')
       isLogin.value = true
     }
   } catch (err) {
+    console.error(err)
     alert(err.response?.data?.message || '操作失敗')
   }
 }
 
 const handleGuestLogin = () => {
-  authStore.guestLogin();
-  alert('已使用訪客身分登入，部分進度可能無法永久儲存');
-  router.push('/gamehome');
-};
+  authStore.guestLogin()
+  alert('以訪客身分進入')
+  handleRedirect() // 訪客也同樣執行跳轉邏輯
+}
 </script>
 
 <style scoped>
@@ -86,13 +101,13 @@ const handleGuestLogin = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #080c10;
+  background: transparent;
   color: #fff;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 600px;
   padding: 40px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(0, 229, 255, 0.2);
@@ -106,7 +121,8 @@ const handleGuestLogin = () => {
   font-size: 2.5rem;
   letter-spacing: 4px;
   text-align: center;
-  margin: 0;
+  margin-left: 0;
+  padding: 0 150px;
   color: #00e5ff;
   text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
 }
@@ -147,12 +163,11 @@ const handleGuestLogin = () => {
 
 .submit-btn {
   width: 100%;
-  padding: 14px;
-  background: #ff5722;
+  padding: 16px;
+  background: #ff6435;
   color: white;
   border: none;
   border-radius: 4px;
-  font-weight: bold;
   letter-spacing: 2px;
   cursor: pointer;
   transition:

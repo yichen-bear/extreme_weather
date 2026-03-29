@@ -32,7 +32,7 @@
         <!-- World Map card -->
         <button
           class="menu-card"
-          @click="currentSubView = 'map'"
+          @click="handleMapClick"
           :class="{ active: currentSubView === 'map' }"
         >
           <div class="card-glow map-glow"></div>
@@ -59,7 +59,7 @@
         <!-- Rules card -->
         <button
           class="menu-card rules-card"
-          @click="currentSubView = 'rules'"
+          @click="startGame"
           :class="{ active: currentSubView === 'rules' }"
         >
           <div class="card-glow rules-glow"></div>
@@ -135,7 +135,13 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { authStore } from '../stores/user'
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
+const router = useRouter()
+const route = useRoute();
 const currentSubView = ref(null)
 
 const mockLeaderboard = [
@@ -145,8 +151,30 @@ const mockLeaderboard = [
 ]
 
 const startGame = () => {
-  alert('遊戲啟動中... 準備進入垂直攀登場景！')
-}
+  // 檢查登入狀態
+  if (!authStore.isLoggedIn) {
+    alert('請先登入以進入遊戲！');
+    router.push({ path: '/loginview', query: { redirect: 'play' } });    
+    return
+  }
+  router.push('/play');
+};
+
+const handleMapClick = () => {
+  if (!authStore.isLoggedIn) {
+    alert('請先登入以查看地圖進度！');
+    router.push({ path: '/loginview', query: { redirect: 'map' } });
+    return
+  }
+  currentSubView.value = 'map'
+};
+
+onMounted(() => {
+  // 如果網址有 ?view=map，就自動切換到地圖
+  if (route.query.view === 'map') {
+    currentSubView.value = 'map';
+  }
+});
 </script>
 
 <style scoped>

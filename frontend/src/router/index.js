@@ -9,6 +9,8 @@ const routes = [
   { path: '/dashboard', component: Dashboard },
   { path: '/gamehome', component: GameHome },
   { path: '/loginview', component: LoginView },
+  { path: '/play', component: { template: '<div>遊戲畫面開發中...</div>' } },
+  { path: '/map', component: { template: '<div>地圖畫面開發中...</div>' } }
 ]
 
 export const router = createRouter({

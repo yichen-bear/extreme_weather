@@ -18,6 +18,28 @@
 import BackgroundCanvas from './components/BgCanvas.vue'
 import StatTicker from './components/StatTicker.vue'
 import Navbar from './components/Navbar.vue';
+// 在 App.vue 的 onMounted 或 main.js
+import axios from 'axios';
+import { authStore } from './stores/user';
+
+// 設定 axios 全域預設值，之後發送 API 都會帶上 Token
+const token = localStorage.getItem('token');
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+// 攔截器：處理 Token 過期
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      // 如果後端說 Token 沒用了
+      authStore.logout();
+      window.location.href = '/loginview'; // 強制導回登入頁
+    }
+    return Promise.reject(error);
+  }
+);
 </script>
 
 <style>
