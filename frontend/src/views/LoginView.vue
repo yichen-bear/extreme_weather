@@ -40,6 +40,7 @@
 import { ref, reactive } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { authStore } from '../stores/user'
 
 const router = useRouter()
 const isLogin = ref(true)
@@ -56,11 +57,10 @@ const handleSubmit = async () => {
     
     if (isLogin.value) {
       // 登入成功：存入 Token 並導向遊戲頁面
-      localStorage.setItem('token', res.data.token)
-      alert('登入成功，歡迎回來！')
+      authStore.login(res.data.token, res.data.username);
+      alert('登入成功！')
       router.push('/gamehome')
     } else {
-      // 註冊成功：切換回登入頁
       alert('註冊成功，請登入')
       isLogin.value = true
     }

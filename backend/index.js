@@ -1,16 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-
-// 引入路由模組
-const loginRoute = require('./api/login');
-const registerRoute = require('./api/register');
+const cors = require('cors')
 
 app.use(express.json());
+app.use(cors())
+
+// 引入路由模組
+const authRoute = require('./api/auth');
 
 // 掛載路徑
-app.use('/api/login', loginRoute);
-app.use('/api/register', registerRoute);
+app.use('/api/auth', authRoute);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

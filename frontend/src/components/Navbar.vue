@@ -8,13 +8,13 @@
         <router-link to="/gamehome" class="nav-item">遊戲</router-link>
 
         <div class="auth-section">
-          <template v-if="!isLoggedIn">
+          <template v-if="!authStore.isLoggedIn">
             <router-link to="/loginview" class="btn-nav primary">登入</router-link>
           </template>
           
           <template v-else>
             <div class="user-info">
-              <span class="user-status">歡迎回來，玩家</span>
+              <span class="user-status">{{ authStore.username }}</span>
               <div class="user-avatar"></div>
             </div>
             <button class="btn-nav logout" @click="handleLogout">登出</button>
@@ -28,12 +28,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { authStore } from '../stores/auth'
+import { authStore } from '../stores/user'
 
 const router = useRouter()
-
-// 暫時測試用的狀態
-const isLoggedIn = ref(false)
 
 const handleLogout = () => {
   if(confirm('確定要登出嗎？')) {
@@ -103,7 +100,7 @@ const handleLogout = () => {
 }
 
 /* 點擊後的底線效果 (Vue Router 自動添加的 class) */
-.router-link-active:not(.nav-logo)::after {
+.nav-item.router-link-active::after {
   content: '';
   position: absolute;
   bottom: -5px;
@@ -152,8 +149,9 @@ const handleLogout = () => {
   transition: all 0.25s ease;
 }
 
-.btn-nav.primary {
+.btn-nav.primary.router-link-active {
   background: var(--c-accent);
+  box-shadow: none;
   color: var(--c-bg);
   border: none;
   font-weight: bold;
