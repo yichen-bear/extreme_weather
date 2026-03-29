@@ -9,7 +9,7 @@
 
         <div class="auth-section">
           <template v-if="!isLoggedIn">
-            <button class="btn-nav primary" @click="goToLogin">登入</button>
+            <router-link to="/loginview" class="btn-nav primary">登入</router-link>
           </template>
           
           <template v-else>
@@ -28,23 +28,16 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { authStore } from '../stores/auth'
 
 const router = useRouter()
 
 // 暫時測試用的狀態
 const isLoggedIn = ref(false)
 
-const goToLogin = () => {
-  // 導向登入頁面，讓玩家在該頁面選擇「訪客」或「帳號登入」
-  router.push('/login')
-  
-  // 測試 UI 用：
-  // isLoggedIn.value = true
-}
-
 const handleLogout = () => {
   if(confirm('確定要登出嗎？')) {
-    isLoggedIn.value = false
+    authStore.logout ()
     router.push('/') // 登出後回首頁
   }
 }
