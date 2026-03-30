@@ -88,35 +88,6 @@
           </div>
         </button>
       </div>
-
-      <!-- Leaderboard -->
-      <footer class="leaderboard-section">
-        <div class="lb-header">
-          <div class="lb-line"></div>
-          <div class="lb-title">
-            <span class="trophy">🏆</span>
-            TOP CLIMBERS
-          </div>
-          <div class="lb-line"></div>
-        </div>
-
-        <div class="lb-grid">
-          <div v-for="(entry, i) in mockLeaderboard" :key="i" class="lb-row">
-            <span class="lb-rank" :class="'rank-' + (i + 1)">{{
-              i === 0 ? '①' : i === 1 ? '②' : '③'
-            }}</span>
-            <span class="lb-name">{{ entry.name }}</span>
-            <div class="lb-bar-wrap">
-              <div class="lb-bar" :style="{ width: entry.pct + '%' }"></div>
-            </div>
-            <span class="lb-score">{{ entry.score }}</span>
-          </div>
-          <div class="lb-row loading-row">
-            <span class="lb-dots"> <span></span><span></span><span></span> </span>
-            <span class="lb-loading-text">排行榜資料連線中</span>
-          </div>
-        </div>
-      </footer>
     </div>
 
     <!-- Sub-view modal -->
@@ -143,12 +114,6 @@ import { useRoute } from 'vue-router';
 const router = useRouter()
 const route = useRoute();
 const currentSubView = ref(null)
-
-const mockLeaderboard = [
-  { name: 'APEX_CLIMBER', score: '98,420', pct: 100 },
-  { name: 'STORMRIDER_77', score: '84,110', pct: 85 },
-  { name: 'ECO_PHOENIX', score: '71,880', pct: 73 },
-]
 
 const startGame = () => {
   // 檢查登入狀態
