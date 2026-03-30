@@ -2,7 +2,7 @@
   <div class="auth-overlay">
     <div class="auth-card">
       <div class="auth-header">
-        <h2 class="auth-title">{{ isLogin ? '登入' : '註冊' }}</h2>
+        <h2 class="auth-title">{{ isLogin ? 'LogIn' : 'Sign Up' }}</h2>
         <div class="title-line"></div>
       </div>
 
