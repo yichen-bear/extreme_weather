@@ -2,7 +2,7 @@
   <div class="auth-overlay">
     <div class="auth-card">
       <div class="auth-header">
-        <h2 class="auth-title">{{ isLogin ? 'LogIn' : 'Sign Up' }}</h2>
+        <h2 class="auth-title">{{ isLogin ? 'Login' : 'Sign Up' }}</h2>
         <div class="title-line"></div>
       </div>
 
@@ -90,7 +90,7 @@ const handleSubmit = async () => {
 
 const handleGuestLogin = () => {
   authStore.guestLogin()
-  alert('以訪客身分進入')
+  alert('以訪客身分進入，遊戲進度會有遺失風險')
   handleRedirect() // 訪客也同樣執行跳轉邏輯
 }
 </script>
