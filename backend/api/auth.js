@@ -3,6 +3,9 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 // 註冊路徑: /api/auth/register
 router.post('/register', async (req, res) => {
@@ -40,6 +43,50 @@ router.post('/login', async (req, res) => {
         res.json({ message: '登入成功', token, username: user.username });
     } catch (err) {
         res.status(500).json({ message: '伺服器錯誤' });
+    }
+});
+
+// Google 登入路徑: /api/auth/google
+router.post('/google', async (req, res) => {
+    const { idToken } = req.body;
+
+    try {
+        // 驗證 Google ID Token
+        const ticket = await client.verifyIdToken({
+            idToken: idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const { email, name, sub: googleId } = payload; // sub 是 Google 的唯一 ID
+
+        // 1. 檢查資料庫是否有此 Google 用戶或 Email
+        let [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+        let user;
+
+        if (users.length === 0) {
+            // 2. 如果是第一次登入，自動註冊 (密碼隨機或為空，因為是第三方登入)
+            await db.execute(
+                'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+                [name, email, 'GOOGLE_AUTH_EXTERNAL']
+            );
+            const [newUsers] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+            user = newUsers[0];
+        } else {
+            user = users[0];
+        }
+
+        // 3. 簽發你自己專案的 JWT (沿用你原本的邏輯)
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        
+        res.json({ 
+            message: 'Google 登入成功', 
+            token, 
+            username: user.username 
+        });
+
+    } catch (err) {
+        console.error('Google Auth Error:', err);
+        res.status(401).json({ message: 'Google 驗證失效' });
     }
 });
 

@@ -29,6 +29,15 @@
         <button type="button" class="guest-btn" @click="handleGuestLogin">
           以訪客身分快速體驗
         </button>
+
+        <div class="google-btn-wrapper">
+          <img
+            class="googlepic"
+            src="../assets/google.jpg"
+            alt="Google Login"
+            @click="handleCustomGoogleLogin"
+          />
+        </div>
       </form>
 
       <div class="auth-footer">
@@ -41,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import { authStore } from '../stores/user'
@@ -56,15 +65,13 @@ const formData = reactive({
 })
 
 const handleRedirect = () => {
-  const target = route.query.redirect // 取得網址列的 ?redirect=XXX
-  
+  const target = route.query.redirect
   if (target === 'play') {
-    router.push('/play') 
+    router.push('/play')
   } else if (target === 'map') {
-    // 回到 GameHome 並帶上 view=map 參數
     router.push({ path: '/gamehome', query: { view: 'map' } })
   } else {
-    router.push('/gamehome') 
+    router.push('/gamehome')
   }
 }
 
@@ -72,12 +79,10 @@ const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
   try {
     const res = await axios.post(`http://localhost:3000${endpoint}`, formData)
-    
     if (isLogin.value) {
-      // 登入成功
       authStore.login(res.data.token, res.data.username)
       alert('登入成功！')
-      handleRedirect() // 執行跳轉
+      handleRedirect()
     } else {
       alert('註冊成功，請登入')
       isLogin.value = true
@@ -91,8 +96,51 @@ const handleSubmit = async () => {
 const handleGuestLogin = () => {
   authStore.guestLogin()
   alert('以訪客身分進入，遊戲進度會有遺失風險')
-  handleRedirect() // 訪客也同樣執行跳轉邏輯
+  handleRedirect()
 }
+
+// 修正後的 Google 登入處理
+const handleGoogleResponse = async (response) => {
+  try {
+    // response.credential 是 Google 回傳的 ID Token
+    const res = await axios.post(`http://localhost:3000/api/auth/google`, {
+      idToken: response.credential
+    })
+    authStore.login(res.data.token, res.data.username)
+    alert('Google 登入成功！')
+    handleRedirect()
+  } catch (err) {
+    console.error('Google 驗證失敗詳情:', err.response?.data)
+    alert('Google 驗證失敗')
+  }
+}
+
+// 手動觸發 Google 視窗
+const handleCustomGoogleLogin = () => {
+  /* global google */
+  if (typeof google !== 'undefined') {
+    google.accounts.id.prompt(); 
+  } else {
+    console.error("Google SDK 尚未載入完成");
+  }
+}
+
+onMounted(() => {
+  const script = document.createElement('script')
+  script.src = 'https://accounts.google.com/gsi/client'
+  script.async = true
+  script.defer = true
+  script.onload = () => {
+    /* global google */
+    google.accounts.id.initialize({
+      client_id: "1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com",
+      callback: handleGoogleResponse,
+      auto_select: false,
+      context: 'signin'
+    });
+  }
+  document.head.appendChild(script)
+})
 </script>
 
 <style scoped>
@@ -211,5 +259,31 @@ const handleGuestLogin = () => {
   color: #fff;
   border-color: #00e5ff;
   background: rgba(0, 229, 255, 0.05);
+}
+
+.google-btn-wrapper {
+  width: 100%;
+  display: flex;         
+  justify-content: center;
+  margin-top: 15px;       
+}
+
+.custom-google-btn {
+  width: 100%;           
+  max-width: 400px;      
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.custom-google-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);    
+}
+
+.googlepic {
+  width: 55px;
+  border-radius: 50px;
+  cursor: pointer;
 }
 </style>
