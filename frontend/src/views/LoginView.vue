@@ -80,7 +80,7 @@ const handleSubmit = async () => {
   try {
     const res = await axios.post(`http://localhost:3000${endpoint}`, formData)
     if (isLogin.value) {
-      authStore.login(res.data.token, res.data.username)
+      authStore.login(res.data.token, res.data.username, res.data.avatar)
       alert('登入成功！')
       handleRedirect()
     } else {
@@ -106,7 +106,7 @@ const handleGoogleResponse = async (response) => {
     const res = await axios.post(`http://localhost:3000/api/auth/google`, {
       idToken: response.credential
     })
-    authStore.login(res.data.token, res.data.username)
+    authStore.login(res.data.token, res.data.username, res.data.avatar)
     alert('Google 登入成功！')
     handleRedirect()
   } catch (err) {
@@ -135,6 +135,8 @@ onMounted(() => {
     google.accounts.id.initialize({
       client_id: "1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com",
       callback: handleGoogleResponse,
+      itp_support: true, 
+      use_fedcm_for_prompt: false,
       auto_select: false,
       context: 'signin'
     });

@@ -16,7 +16,9 @@
           <template v-else>
             <div class="user-info">
               <span class="user-status">{{ authStore.isGuest ? '🚧 訪客' : authStore.username }}</span>
-              <div class="user-avatar"></div>
+              <div class="user-avatar">
+                <img v-if="authStore.avatar" :src="authStore.avatar" class="avatar-img">
+              </div>
             </div>
             <button class="btn-nav logout" @click="handleLogout">登出</button>
           </template>
@@ -137,6 +139,16 @@ const handleLogout = () => {
   background: var(--c-surface);
   border: 1px solid var(--c-accent);
   border-radius: 50%;
+  overflow: hidden; /* 確保圖片裁切成圓形 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 確保圖片填滿且不變形 */
 }
 
 .btn-nav {

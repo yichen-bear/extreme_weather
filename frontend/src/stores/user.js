@@ -4,15 +4,18 @@ import { reactive } from 'vue'
 export const authStore = reactive({
   isLoggedIn: !!localStorage.getItem('token'),
   username: localStorage.getItem('username') || '玩家',
-  isGuest: localStorage.getItem('isGuest') === 'true', // 新增：標記是否為訪客
+  isGuest: localStorage.getItem('isGuest') === 'true', // 標記是否為訪客
+  avatar: localStorage.getItem('avatar') || '',
 
-  login(token, username) {
+  login(token, username, avatar) {
     localStorage.setItem('token', token);
     localStorage.setItem('username', username);
     localStorage.setItem('isGuest', 'false');
+    localStorage.setItem('avatar', avatar || ''); // 存入本地，重整頁面才不會消失
     this.isLoggedIn = true;
     this.username = username;
     this.isGuest = false;
+    this.avatar = avatar || '';
   },
 
   guestLogin() {
@@ -30,5 +33,6 @@ export const authStore = reactive({
     this.isLoggedIn = false;
     this.username = '玩家';
     this.isGuest = false;
+    this.avatar = '';
   }
 });
