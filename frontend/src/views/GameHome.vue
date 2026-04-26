@@ -167,6 +167,8 @@ onMounted(() => {
   color: #fff;
   animation: fadeIn 1s ease-out;
   padding-top: 50px;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
 }
 
 /* ===== HEADER ===== */
@@ -402,7 +404,7 @@ onMounted(() => {
     0 20px 60px rgba(0, 0, 0, 0.6);
 }
 .start-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.07);
   box-shadow:
     0 0 0 1px rgba(255, 87, 34, 0.6),
     0 0 80px rgba(255, 87, 34, 0.5),

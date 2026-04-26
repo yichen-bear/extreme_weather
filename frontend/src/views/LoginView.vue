@@ -147,15 +147,27 @@ onMounted(() => {
 
 <style scoped>
 .auth-overlay {
-  min-height: 100vh;
+  padding-top: 100px;
+  height: calc(100vh - 36px); 
   display: flex;
-  align-items: center;
+  align-items: flex-start; 
   justify-content: center;
   background: transparent;
   color: #fff;
+  overflow-y: auto; 
+  padding: 45px 20px; 
+  box-sizing: border-box;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.auth-overlay::-webkit-scrollbar {
+  display: none;
 }
 
 .auth-card {
+  margin: 0 auto;
   width: 100%;
   max-width: 600px;
   padding: 40px;
