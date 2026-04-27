@@ -11,7 +11,10 @@ const routes = [
   { path: '/dashboard', component: Dashboard },
   { path: '/gamehome', component: GameHome },
   { path: '/loginview', component: LoginView },
-  { path: '/play', component: Game },
+  { path: '/play', 
+    component: Game,
+    meta: { hideAppComponents: true },
+  },
   { path: '/map', component: { template: '<div>地圖畫面開發中...</div>' } },
   { path: '/leaderboard', component: Leaderboard },
 ]

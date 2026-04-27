@@ -1,7 +1,7 @@
 <template>
   <BackgroundCanvas />
 
-  <Navbar />
+  <Navbar v-if="!$route.meta.hideAppComponents" />
 
   <main id="app">
     <router-view v-slot="{ Component }">
@@ -11,7 +11,7 @@
     </router-view>
   </main>
 
-  <StatTicker />
+  <StatTicker v-if="!$route.meta.hideAppComponents" />
 </template>
 
 <script setup>
