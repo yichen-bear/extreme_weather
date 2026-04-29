@@ -5,7 +5,6 @@
 
     <div class="leaderboard-container">
       <header class="page-header">
-        <div class="header-prefix">// SYSTEM_LOG // HIGH_SCORES</div>
         <h1 class="page-title">
           <span class="title-text">TOP CLIMBERS</span>
           <span class="title-glitch">TOP CLIMBERS</span>
