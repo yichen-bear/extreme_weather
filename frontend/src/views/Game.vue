@@ -77,6 +77,7 @@ const PLATFORM_WIDTH = 70
 const PLATFORM_MIN_WIDTH = 50
 const PLATFORM_MAX_WIDTH = 90
 let windDirection = 0
+const generatedBoundaries = ref([])
 
 // 水位相关（平衡后速度）
 const activeWaterRise = ref(false)
@@ -138,8 +139,8 @@ const initPlatforms = () => {
   for (let i = 0; i < PLATFORM_COUNT; i++) {
     let newY = lastY - (Math.random() * 40 + 70)
     // 每層生成 2-3 個平台（從一開始就多路徑）
-        // 第1、2關：1個40%、2個50%、3個10%
-        // 根據關卡決定平台數量
+    // 第1、2關：1個40%、2個50%、3個10%
+    // 根據關卡決定平台數量
     const level = getCurrentLevel()
     let pathCount
     if (level <= 1) {
@@ -244,7 +245,7 @@ const updateBurningPlatforms = () => {
   if (level === 2) {
     // 第3關：按 Y 座標分組，每組最多著火數量限制
     const platformsByY = {}
-    platforms.forEach(p => {
+    platforms.forEach((p) => {
       if (!p.isFloor) {
         const yKey = Math.floor(p.y / 10)
         if (!platformsByY[yKey]) platformsByY[yKey] = []
@@ -252,15 +253,15 @@ const updateBurningPlatforms = () => {
       }
     })
     // 每組最多只能有一個著火
-    Object.values(platformsByY).forEach(group => {
-      const burningCount = group.filter(p => p.isBurning).length
+    Object.values(platformsByY).forEach((group) => {
+      const burningCount = group.filter((p) => p.isBurning).length
       if (burningCount > 1) {
-        group.forEach(p => p.isBurning = false)
+        group.forEach((p) => (p.isBurning = false))
       }
     })
   }
-  
-  if (shouldHaveFire && platforms.filter(p => p.isBurning && !p.isFloor).length < 2) {
+
+  if (shouldHaveFire && platforms.filter((p) => p.isBurning && !p.isFloor).length < 2) {
     const nonBurning = platforms.filter((p) => !p.isFloor && !p.isBurning)
     if (nonBurning.length)
       nonBurning[Math.floor(Math.random() * nonBurning.length)].isBurning = true
@@ -282,6 +283,7 @@ const resetGame = () => {
   activeWaterRise.value = false
   player.invincible = false
   currentWaterRiseSpeed = 0.08
+  generatedBoundaries.value = []
   initPlatforms()
   updateLevelEffects()
 }
@@ -300,8 +302,18 @@ const applyDamage = () => {
 }
 
 const updateWaterRise = () => {
+  const level = getCurrentLevel()
+
   if (!activeWaterRise.value) {
-    waterHeight.value = 0
+    // 如果水位還在大於 0 的位置，就慢慢減去高度
+    if (waterHeight.value > 0) {
+      waterHeight.value -= 1.5 // <--- 調整這個數值可以控制退水的速度
+    }
+
+    // 確保不會變成負數
+    if (waterHeight.value < 0) {
+      waterHeight.value = 0
+    }
     return
   }
 
@@ -362,76 +374,105 @@ const update = () => {
     player.y = CANVAS_HEIGHT / 2
     score.value += diff * 0.1
 
-        platforms.forEach((p) => {
+    platforms.forEach((p) => {
       p.y += diff
       if (p.y > CANVAS_HEIGHT) {
-        // 1. 找到目前最高點，決定新台階要放多高
         let highestPlatform = platforms.reduce((prev, curr) => (prev.y < curr.y ? prev : curr))
         let newY = highestPlatform.y - (Math.random() * 50 + 80)
-        
-        // 2. 根據關卡決定平台數量
-        let pathCount
-        if (level <= 1) {
-          // 第1、2關：1個40%、2個50%、3個10%
-          const rand = Math.random()
-          if (rand < 0.4) {
-            pathCount = 1
-          } else if (rand < 0.9) {
-            pathCount = 2
-          } else {
-            pathCount = 3
-          }
-        } else if (level === 2) {
-          // 第3關：2個70%、3個30%
-          const rand = Math.random()
-          if (rand < 0.7) {
-            pathCount = 2
-          } else {
-            pathCount = 3
-          }
-        } else {
-          // 第4、5關：2個70%、3個30%
-          const rand = Math.random()
-          if (rand < 0.7) {
-            pathCount = 2
-          } else {
-            pathCount = 3
-          }
-        }
-        
-        // 3. 計算寬度（在此判斷颱風關卡）
-        const extraWidth = (level === 3) ? 25 : 0 
-        
-        // 4. 移除舊平台，創建新的平台
-        platforms = platforms.filter(p => p.y <= CANVAS_HEIGHT)
-        
-        // 5. 生成多個新平台
-        for (let j = 0; j < pathCount; j++) {
-          let finalWidth = PLATFORM_MIN_WIDTH + Math.random() * (PLATFORM_MAX_WIDTH - PLATFORM_MIN_WIDTH) + extraWidth
-          let newX = Math.random() * (CANVAS_WIDTH - PLATFORM_MAX_WIDTH)
+
+        // 計算新平台對應的高度
+        let nextScore = score.value + (CANVAS_HEIGHT - newY) * 0.1
+
+        const targets = [200, 400, 600, 800]
+
+        // 關鍵修改：檢查 nextScore 是否跨過門檻，且該門檻「尚未」出現在 generatedBoundaries 中
+        let targetToGenerate = targets.find(
+          (t) => nextScore >= t && !generatedBoundaries.value.includes(t),
+        )
+
+        // 移除舊平台
+        platforms = platforms.filter((p) => p.y <= CANVAS_HEIGHT)
+
+        if (targetToGenerate) {
+          // 紀錄這個門檻，防止重複生成
+          generatedBoundaries.value.push(targetToGenerate)
+
+          // 生成貫穿階梯
           platforms.push({
-            x: newX,
+            x: 0,
             y: newY,
-            width: finalWidth,
-            height: 12,
-            isFloor: false,
-            isBurning: false
+            width: CANVAS_WIDTH,
+            height: 20,
+            isFloor: true,
+            isBurning: false,
+            isBoundary: true,
           })
+        } else {
+          const level = getCurrentLevel()
+          let pathCount
+          if (level <= 1) {
+            // 第1、2關：1個40%、2個50%、3個10%
+            const rand = Math.random()
+            if (rand < 0.4) {
+              pathCount = 1
+            } else if (rand < 0.9) {
+              pathCount = 2
+            } else {
+              pathCount = 3
+            }
+          } else if (level === 2) {
+            // 第3關：2個70%、3個30%
+            const rand = Math.random()
+            if (rand < 0.7) {
+              pathCount = 2
+            } else {
+              pathCount = 3
+            }
+          } else {
+            // 第4、5關：2個70%、3個30%
+            const rand = Math.random()
+            if (rand < 0.7) {
+              pathCount = 2
+            } else {
+              pathCount = 3
+            }
+          }
+
+          // 3. 計算寬度（在此判斷颱風關卡）
+          const extraWidth = level === 3 ? 25 : 0
+
+          // 4. 移除舊平台，創建新的平台
+          platforms = platforms.filter((p) => p.y <= CANVAS_HEIGHT)
+
+          // 5. 生成多個新平台
+          for (let j = 0; j < pathCount; j++) {
+            let finalWidth =
+              PLATFORM_MIN_WIDTH +
+              Math.random() * (PLATFORM_MAX_WIDTH - PLATFORM_MIN_WIDTH) +
+              extraWidth
+            let newX = Math.random() * (CANVAS_WIDTH - PLATFORM_MAX_WIDTH)
+            platforms.push({
+              x: newX,
+              y: newY,
+              width: finalWidth,
+              height: 12,
+              isFloor: false,
+              isBurning: false,
+            })
+          }
         }
       }
     })
 
     if (activeWaterRise.value) {
-      // 當相機向上移動時，水位也要跟著上升（視覺效果）
-      // 不要減少水位，否則會抵消水位上升的效果
-      // 水位上升現在由獨立的 updateWaterRise 處理
+      waterHeight.value -= diff // 當背景向下捲動時，相對於螢幕的水位高度要減少
+      if (waterHeight.value < 0) waterHeight.value = 0
     }
 
     updateLevelEffects()
     // 洪水水位獨立於玩家移動，每幀都更新
     updateWaterRise()
     updateBurningPlatforms()
-
   }
 
   // 洪水水位獨立更新（每幀都上升，不依賴於滾動）
@@ -488,10 +529,11 @@ playerImage.src = '../assets/orbit.png'
 
 const getLevelForSky = () => {
   const s = score.value
-  if (s < 250) return 0
-  if (s < 500) return 1
-  if (s < 750) return 2
-  return 3
+  if (s < 200) return 0 // 新手
+  if (s < 400) return 1 // 洪水
+  if (s < 650) return 2 // 野火
+  if (s < 800) return 3 // 颱風 [建議調整此門檻以對應你的關卡高度]
+  return 4 // 最終試煉
 }
 
 const LEVEL_SKIES = [
@@ -525,8 +567,22 @@ const LEVEL_SKIES = [
   ], // 最終
 ]
 
-const LEVEL_PLATFORM_COLOR = ['#546e7a', '#bf360c', '#4a148c', '#1a237e']
-const LEVEL_PLATFORM_TOP = ['#78909c', '#ff7043', '#9c27b0', '#3949ab']
+// 每個索引對應：新手(0)、洪水(1)、野火(2)、颱風(3)、最終(4)
+const LEVEL_PLATFORM_COLOR = [
+  '#546e7a', // 🌱 新手 (灰藍)
+  '#bf360c', // 💧 洪水 (深橘紅)
+  '#4a148c', // 🔥 野火 (深紫)
+  '#37474f', // 🌀 颱風 (深灰，配合灰藍天空) [新增]
+  '#1a237e', // ⚡ 最終 (深藍)
+]
+
+const LEVEL_PLATFORM_TOP = [
+  '#78909c', // 🌱 頂部
+  '#ff7043', // 💧 頂部
+  '#9c27b0', // 🔥 頂部
+  '#78909c', // 🌀 頂部 [新增]
+  '#3949ab', // ⚡ 頂部
+]
 
 const draw = () => {
   const skyLevel = getLevelForSky()
@@ -612,16 +668,6 @@ const draw = () => {
     ctx.globalAlpha = 1
   }
 
-  // 氛围叠加（洪水/野火主题）
-  const current = getCurrentLevel()
-  if (current === 1 || current === 3) {
-    ctx.fillStyle = 'rgba(0, 40, 80, 0.25)'
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-  } else if (current === 2) {
-    ctx.fillStyle = 'rgba(80, 30, 0, 0.25)'
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-  }
-
   // 在 draw 函數內呼叫 (傳入剛才計算的 windDirection)
   drawWindIndicator(windDirection)
 }
@@ -646,7 +692,6 @@ const drawWindIndicator = (direction) => {
 
   ctx.restore()
 }
-
 
 const loop = () => {
   update()
