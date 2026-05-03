@@ -372,6 +372,7 @@ const update = () => {
   if (player.y < CANVAS_HEIGHT / 2) {
     let diff = CANVAS_HEIGHT / 2 - player.y
     player.y = CANVAS_HEIGHT / 2
+
     score.value += diff * 0.1
 
     platforms.forEach((p) => {
@@ -385,27 +386,35 @@ const update = () => {
 
         const targets = [200, 400, 600, 800]
 
-        // 關鍵修改：檢查 nextScore 是否跨過門檻，且該門檻「尚未」出現在 generatedBoundaries 中
+        // 找出下一個還沒生成的門檻
         let targetToGenerate = targets.find(
-          (t) => nextScore >= t && !generatedBoundaries.value.includes(t),
+          (t) => t > score.value && !generatedBoundaries.value.includes(t),
         )
 
-        // 移除舊平台
-        platforms = platforms.filter((p) => p.y <= CANVAS_HEIGHT)
+        let altitudeDiff = targetToGenerate - score.value;
+        let pixelOffset = altitudeDiff / 0.1;
+        let standardNextY = highestPlatform.y - (Math.random() * 50 + 80)
+        let estimatedScore = score.value + (CANVAS_HEIGHT - standardNextY) * 0.1
 
-        if (targetToGenerate) {
-          // 紀錄這個門檻，防止重複生成
+        // 如果預計分數已經快到門檻了，就強制把平台修正到精確的高度座標
+        if (targetToGenerate && pixelOffset > 300 && pixelOffset < 600) {
           generatedBoundaries.value.push(targetToGenerate)
 
-          // 生成貫穿階梯
+          let distanceToTarget = targetToGenerate - score.value
+
+          let pixelToTarget = distanceToTarget / 0.1
+
+          let preciseY = player.y - pixelToTarget
+
           platforms.push({
             x: 0,
-            y: newY,
+            y: preciseY, // 使用精確計算的 Y
             width: CANVAS_WIDTH,
             height: 20,
             isFloor: true,
             isBurning: false,
             isBoundary: true,
+            targetScore: targetToGenerate
           })
         } else {
           const level = getCurrentLevel()
@@ -464,6 +473,7 @@ const update = () => {
       }
     })
 
+
     if (activeWaterRise.value) {
       waterHeight.value -= diff // 當背景向下捲動時，相對於螢幕的水位高度要減少
       if (waterHeight.value < 0) waterHeight.value = 0
@@ -487,9 +497,7 @@ const update = () => {
         player.vy = currentJumpForce
         lastPlatform.x = player.x
         lastPlatform.y = p.y - player.height
-        // if (activeWaterRise.value && waterHeight.value > 0) {
-        //   waterHeight.value = Math.max(0, waterHeight.value - 0.5);
-        // }
+
         if (p.isBurning && !p.isFloor) {
           applyDamage()
         }
