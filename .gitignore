@@ -3,3 +3,5 @@ node_modules/
 
 # 忽略開發環境的私密變數
 .env
+
+client_secret_1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com.json

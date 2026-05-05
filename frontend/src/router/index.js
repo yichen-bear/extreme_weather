@@ -4,15 +4,16 @@ import Dashboard from '../views/Dashboard.vue'
 import GameHome from '../views/GameHome.vue'
 import LoginView from '../views/LoginView.vue'
 import Leaderboard from '../views/Leaderboard.vue'
-import MapView from '../views/MapView.vue'
-
+import Game from '../views/Game.vue'
+import MapView  from '../views/MapView.vue'
 
 const routes = [
   { path: '/', component: Home },
   { path: '/dashboard', component: Dashboard },
   { path: '/gamehome', component: GameHome },
   { path: '/loginview', component: LoginView },
-  { path: '/map', name: 'map', component: MapView },
+  { path: '/play', component: Game},
+  { path: '/map', component: Mapview },
   { path: '/leaderboard', component: Leaderboard },
 ]
 
