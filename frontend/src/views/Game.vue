@@ -186,14 +186,12 @@ const initPlatforms = () => {
   }
 }
 
-// ----- 新关卡定义（只有四个阶段）-----
-// 高度分段：新手训练 < 300m，波濤洪水 300-650m，野火燎原 650-1000m，最終試煉 >= 1000m
 const getCurrentLevel = () => {
   const alt = score.value
   if (alt < 200) return 0 // 🌱 新手訓練
   if (alt < 400) return 1 // 💧 波濤洪水
   if (alt < 600) return 2 // 🔥 野火燎原
-  if (alt < 850) return 3 // 🌀 狂風大作 (新增)
+  if (alt < 800) return 3 // 🌀 狂風大作
   return 4 // ⚡ 最終試煉
 }
 
@@ -210,7 +208,7 @@ const updateLevelEffects = () => {
       currentLevelName.value = '💧 波濤洪水'
       activeWaterRise.value = true
       // 不要重置 waterHeight，讓它保持連續上升
-      currentWaterRiseSpeed = 1.1
+      currentWaterRiseSpeed = 0.9
       break
     case 2:
       currentLevelName.value = '🔥 野火燎原'
@@ -223,7 +221,7 @@ const updateLevelEffects = () => {
     case 4:
       currentLevelName.value = '⚡ 最終試煉'
       activeWaterRise.value = true
-      currentWaterRiseSpeed = 0.12
+      currentWaterRiseSpeed = 1.2
       break
   }
 }
@@ -231,40 +229,62 @@ const updateLevelEffects = () => {
 // 更新着火平台（野火燎原 & 最終試煉）
 const updateBurningPlatforms = () => {
   const level = getCurrentLevel()
-  const shouldHaveFire = level === 2 || level === 3
+  const shouldHaveFire = level === 2 || level === 4
   if (!shouldHaveFire) {
     platforms.forEach((p) => {
       if (!p.isFloor) p.isBurning = false
     })
     return
   }
-  platforms.forEach((p) => {
-    if (!p.isFloor && Math.random() < 0.006) p.isBurning = true
-    if (p.isBurning && Math.random() < 0.003) p.isBurning = false
-  })
   if (level === 2) {
-    // 第3關：按 Y 座標分組，每組最多著火數量限制
     const platformsByY = {}
     platforms.forEach((p) => {
       if (!p.isFloor) {
-        const yKey = Math.floor(p.y / 10)
+        const yKey = p.y.toFixed(0)
         if (!platformsByY[yKey]) platformsByY[yKey] = []
         platformsByY[yKey].push(p)
       }
     })
-    // 每組最多只能有一個著火
-    Object.values(platformsByY).forEach((group) => {
-      const burningCount = group.filter((p) => p.isBurning).length
-      if (burningCount > 1) {
-        group.forEach((p) => (p.isBurning = false))
+
+    // 2. 遍歷每一層進行邏輯檢查
+    Object.values(platformsByY).forEach((layer) => {
+      if (layer.length > 1) {
+        // 檢查這一層是否已經有火了
+        const hasFire = layer.some((p) => p.isBurning)
+        const allBurning = layer.every((p) => p.isBurning)
+
+        // 規則：如果這層一個火都沒有，就隨機挑一個點火[cite: 1]
+        if (!hasFire) {
+          const luckyIndex = Math.floor(Math.random() * layer.length)
+          layer[luckyIndex].isBurning = true
+        }
+
+        // 安全機制：如果這層全都著火了，隨機熄滅一個，防止無路可走[cite: 1]
+        if (allBurning) {
+          const safeIndex = Math.floor(Math.random() * layer.length)
+          layer[safeIndex].isBurning = false
+        }
+      } else {
+        // 如果這層只有一個台階，為了公平起見，強制不准著火[cite: 1]
+        layer[0].isBurning = false
       }
     })
-  }
 
-  if (shouldHaveFire && platforms.filter((p) => p.isBurning && !p.isFloor).length < 2) {
-    const nonBurning = platforms.filter((p) => !p.isFloor && !p.isBurning)
-    if (nonBurning.length)
-      nonBurning[Math.floor(Math.random() * nonBurning.length)].isBurning = true
+    // 3. 補火邏輯：如果畫面上著火數量太少，隨機挑選多平台層來點火[cite: 1]
+    const nonFloorPlatforms = platforms.filter((p) => !p.isFloor)
+    const burningTotal = nonFloorPlatforms.filter((p) => p.isBurning).length
+
+    if (burningTotal < 2) {
+      // 只挑選「所在層台階數 > 1」且「目前沒著火」的平台[cite: 1]
+      const fireCandidates = nonFloorPlatforms.filter((p) => {
+        const yKey = p.y.toFixed(0)
+        return !p.isBurning && platformsByY[yKey].length > 1
+      })
+
+      if (fireCandidates.length > 0) {
+        fireCandidates[Math.floor(Math.random() * fireCandidates.length)].isBurning = true
+      }
+    }
   }
 }
 
@@ -355,7 +375,7 @@ const update = () => {
 
   windDirection = 0 // 0: 無風, 1: 右, -1: 左
   if (level === 3) {
-    const windForce = Math.sin(frameCount * 0.015) * 1.5 // 風力強度
+    const windForce = Math.sin(frameCount * 0.015) * 0.8 // 風力強度
     player.x += windForce
     windDirection = windForce > 0 ? 1 : -1 // 判斷箭頭方向
   }
@@ -391,8 +411,8 @@ const update = () => {
           (t) => t > score.value && !generatedBoundaries.value.includes(t),
         )
 
-        let altitudeDiff = targetToGenerate - score.value;
-        let pixelOffset = altitudeDiff / 0.1;
+        let altitudeDiff = targetToGenerate - score.value
+        let pixelOffset = altitudeDiff / 0.1
         let standardNextY = highestPlatform.y - (Math.random() * 50 + 80)
         let estimatedScore = score.value + (CANVAS_HEIGHT - standardNextY) * 0.1
 
@@ -414,7 +434,7 @@ const update = () => {
             isFloor: true,
             isBurning: false,
             isBoundary: true,
-            targetScore: targetToGenerate
+            targetScore: targetToGenerate,
           })
         } else {
           const level = getCurrentLevel()
@@ -460,19 +480,22 @@ const update = () => {
               Math.random() * (PLATFORM_MAX_WIDTH - PLATFORM_MIN_WIDTH) +
               extraWidth
             let newX = Math.random() * (CANVAS_WIDTH - PLATFORM_MAX_WIDTH)
+            let willBurn = false
+            if (level === 2) {
+              willBurn = Math.random() < 0.8
+            }
             platforms.push({
               x: newX,
               y: newY,
               width: finalWidth,
               height: 12,
               isFloor: false,
-              isBurning: false,
+              isBurning: willBurn,
             })
           }
         }
       }
     })
-
 
     if (activeWaterRise.value) {
       waterHeight.value -= diff // 當背景向下捲動時，相對於螢幕的水位高度要減少
@@ -539,7 +562,7 @@ const getLevelForSky = () => {
   const s = score.value
   if (s < 200) return 0 // 新手
   if (s < 400) return 1 // 洪水
-  if (s < 650) return 2 // 野火
+  if (s < 600) return 2 // 野火
   if (s < 800) return 3 // 颱風 [建議調整此門檻以對應你的關卡高度]
   return 4 // 最終試煉
 }
