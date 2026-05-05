@@ -240,7 +240,7 @@ const updateBurningPlatforms = () => {
     const platformsByY = {}
     platforms.forEach((p) => {
       if (!p.isFloor) {
-        const yKey = p.y.toFixed(0)
+        const yKey = Math.round(p.y).toString()
         if (!platformsByY[yKey]) platformsByY[yKey] = []
         platformsByY[yKey].push(p)
       }
@@ -474,12 +474,28 @@ const update = () => {
           platforms = platforms.filter((p) => p.y <= CANVAS_HEIGHT)
 
           // 5. 生成多個新平台
+          // 在 update 函式的生成區塊中
           for (let j = 0; j < pathCount; j++) {
             let finalWidth =
               PLATFORM_MIN_WIDTH +
               Math.random() * (PLATFORM_MAX_WIDTH - PLATFORM_MIN_WIDTH) +
               extraWidth
-            let newX = Math.random() * (CANVAS_WIDTH - PLATFORM_MAX_WIDTH)
+            let newX
+            let isOverlapping = true
+            let attempts = 0
+
+            while (isOverlapping && attempts < 5) {
+              newX = Math.random() * (CANVAS_WIDTH - finalWidth)
+              // 檢查是否與同一層（同一個 newY）的其他平台重疊
+              isOverlapping = platforms.some(
+                (p) =>
+                  Math.abs(p.y - newY) < 1 && // 同一層
+                  newX < p.x + p.width + 20 && // 加上 20px 的強制間距
+                  newX + finalWidth > p.x - 20,
+              )
+              attempts++
+            }
+
             platforms.push({
               x: newX,
               y: newY,
