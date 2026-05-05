@@ -236,7 +236,7 @@ const updateBurningPlatforms = () => {
     })
     return
   }
-  if (level === 2) {
+  if (level === 2 || level === 4) {
     const platformsByY = {}
     platforms.forEach((p) => {
       if (!p.isFloor) {
@@ -374,10 +374,18 @@ const update = () => {
   else player.vx *= 0.85
 
   windDirection = 0 // 0: 無風, 1: 右, -1: 左
-  if (level === 3) {
-    const windForce = Math.sin(frameCount * 0.015) * 0.8 // 風力強度
+  if (level === 3 || level === 4) {
+    let windSpeed = 0.015
+    let windIntensity = 0.8
+
+    if (level === 4) {
+      windSpeed = 0.03 // 最終試煉：風向變換頻率加倍
+      windIntensity = 1.1 // 最終試煉：風力增強
+    }
+
+    const windForce = Math.sin(frameCount * windSpeed) * windIntensity
     player.x += windForce
-    windDirection = windForce > 0 ? 1 : -1 // 判斷箭頭方向
+    windDirection = windForce > 0 ? 1 : -1
   }
 
   player.x += player.vx
@@ -449,7 +457,7 @@ const update = () => {
             } else {
               pathCount = 3
             }
-          } else if (level === 2) {
+          } else if (level === 2 || level === 3) {
             // 第3關：2個70%、3個30%
             const rand = Math.random()
             if (rand < 0.7) {
@@ -460,13 +468,12 @@ const update = () => {
           } else {
             // 第4、5關：2個70%、3個30%
             const rand = Math.random()
-            if (rand < 0.7) {
-              pathCount = 2
+            if (rand < 0.2) {
+              pathCount = 2 // 20% 出現兩個台階
             } else {
               pathCount = 3
             }
           }
-
           // 3. 計算寬度（在此判斷颱風關卡）
           const extraWidth = level === 3 ? 25 : 0
 
