@@ -480,17 +480,13 @@ const update = () => {
               Math.random() * (PLATFORM_MAX_WIDTH - PLATFORM_MIN_WIDTH) +
               extraWidth
             let newX = Math.random() * (CANVAS_WIDTH - PLATFORM_MAX_WIDTH)
-            let willBurn = false
-            if (level === 2) {
-              willBurn = Math.random() < 0.8
-            }
             platforms.push({
               x: newX,
               y: newY,
               width: finalWidth,
               height: 12,
               isFloor: false,
-              isBurning: willBurn,
+              isBurning: false,
             })
           }
         }
