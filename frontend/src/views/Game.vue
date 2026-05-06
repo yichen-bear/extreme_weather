@@ -49,7 +49,28 @@
               <span class="restart-icon">▲</span>
               重新攀登
             </button>
+            <button @click="backToHome" class="back-home-btn">返回大廳</button>
           </div>
+        </div>
+      </Transition>
+
+      <!-- Start Menu / Character Selection -->
+      <!-- 首頁選單 UI (與 Canvas 並存) -->
+      <Transition name="fade">
+        <div v-if="!gameStarted" class="home-menu-layer">
+          <!-- 角色切換控制 -->
+          <div class="character-selector">
+            <button @click="prevChar" class="arrow-btn left">◀</button>
+            <div class="char-info-display">
+              <div class="char-name-tag">{{ characters[selectedCharIndex].name }}</div>
+            </div>
+            <button @click="nextChar" class="arrow-btn right">▶</button>
+          </div>
+
+          <!-- 開始按鈕 -->
+          <button @click="startGame" class="big-play-btn">
+            <span class="play-icon">START</span>
+          </button>
         </div>
       </Transition>
 
@@ -83,14 +104,85 @@ const generatedBoundaries = ref([])
 const activeWaterRise = ref(false)
 const waterHeight = ref(0)
 let waterWorldY = CANVAS_HEIGHT
-let currentWaterRiseSpeed = 0.08 // 基础上升速度（大幅降低）
-const maxWaterHeight = CANVAS_HEIGHT * 0.4 // 最高升至40%高度（约272px）
+let currentWaterRiseSpeed = 0.08
+const maxWaterHeight = CANVAS_HEIGHT * 0.4
+const gameStarted = ref(false)
+const selectedCharIndex = ref(0)
+const characters = [
+  { id: 1, name: '冒險者', icon: '🏃', img: '../assets/fall.png' },
+  { id: 2, name: '太空人', icon: '👨‍🚀', img: '../assets/astronaut.png' },
+  { id: 3, name: '小貓貓', icon: '🐱', img: '../assets/cat.png' },
+  { id: 4, name: '機器人', icon: '🤖', img: '../assets/bot.png' },
+  { id: 5, name: '忍者', icon: '🥷', img: '../assets/ninja.png' },
+  { id: 6, name: '探險家', icon: '🤠', img: '../assets/explorer.png' },
+]
+
+const prevChar = () => {
+  selectedCharIndex.value = (selectedCharIndex.value - 1 + characters.length) % characters.length
+  updatePlayerSkin()
+}
+
+const nextChar = () => {
+  selectedCharIndex.value = (selectedCharIndex.value + 1) % characters.length
+  updatePlayerSkin()
+}
+
+const updatePlayerSkin = () => {
+  const char = characters[selectedCharIndex.value]
+  playerImage.src = new URL(char.img, import.meta.url).href
+  
+  // 確保切換角色時，如果是在大廳，畫面會即時更新
+  if (!gameStarted.value) {
+    draw()
+  }
+}
+
+const startGame = () => {
+  gameStarted.value = true
+  resetGame() // 確保遊戲數據重置
+  loop() // 正式開始動畫循環
+}
+
+const backToHome = () => {
+  if (animationId) cancelAnimationFrame(animationId) // 停止所有運動
+  
+  gameOver.value = false
+  gameStarted.value = false
+  score.value = 0
+  playerLives.value = 2
+  waterHeight.value = 0
+  activeWaterRise.value = false
+
+  // 1. 強制設定角色在大廳的展示位置 (y: 250 附近是中間)
+  player.x = 235 // 水平置中
+  player.y = 250 // 垂直置中
+  player.vx = 0
+  player.vy = 0
+
+  // 2. 設定腳下的小平台
+  platforms = [{
+    x: 245,
+    y: 325, // 放在角色腳下 (250 + 角色高度 75)
+    width: 30,
+    height: 10,
+    isFloor: true,
+    isBurning: false,
+  }]
+
+  // 3. 關鍵：手動呼叫一次 draw，讓 Canvas 渲染當前座標
+  // 由於圖片載入需要時間，加個 onload 確保第一次進來能看到角色
+  if (playerImage.complete) {
+    draw()
+  } else {
+    playerImage.onload = () => draw()
+  }
+}
 
 let player = {
   x: 260,
   y: 630,
-  width: 266,
-  height: 150,
+  width: 50,
+  height: 75,
   vx: 0,
   vy: 0,
   invincible: false,
@@ -575,7 +667,7 @@ const update = () => {
 
 // ----- 绘图部分（保留原配色 + 氛围）-----
 const playerImage = new Image()
-playerImage.src = new URL('../assets/orbit.png', import.meta.url).href
+playerImage.src = new URL('../assets/fall.png', import.meta.url).href
 
 const getLevelForSky = () => {
   const s = score.value
@@ -757,8 +849,9 @@ onMounted(() => {
   window.addEventListener('keyup', (e) => {
     keys[e.key] = false
   })
-  resetGame()
-  loop()
+
+  // 確保一進網頁，角色就在中間
+  backToHome() 
 })
 
 onUnmounted(() => {
@@ -959,5 +1052,184 @@ canvas {
 .gameover-enter-from,
 .gameover-leave-to {
   opacity: 0;
+}
+
+.start-menu-overlay {
+  position: absolute;
+  /* 使用 inset 只覆蓋 Canvas 區域，或調整背景透明度 */
+  inset: 0;
+  /* 改為較透明的背景，讓玩家看得到天空背景 */
+  background: rgba(6, 12, 20, 0.4);
+  /* 移除強烈的模糊，或者調小數值 */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* z-index 要低於導覽按鈕(40)，但高於 Canvas */
+  z-index: 30;
+}
+
+.menu-panel {
+  text-align: center;
+  /* 增加一點深色對比，確保選單文字清晰 */
+  background: rgba(13, 26, 36, 0.95);
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.character-grid {
+  display: flex;
+  gap: 20px;
+  margin: 30px 0;
+  justify-content: center;
+}
+
+.char-card {
+  padding: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.char-card.active {
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.char-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.char-name {
+  color: #fff;
+  font-size: 14px;
+}
+
+.start-btn {
+  background: #00e5ff;
+  color: #000;
+  border: none;
+  padding: 12px 30px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+/* 首頁層級 */
+.home-menu-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* 讓 UI 集中在下方 */
+  padding-bottom: 80px;
+  background: transparent; 
+  backdrop-filter: none;
+}
+
+/* 角色切換器容器 */
+.character-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.arrow-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  color: #00e5ff;
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow-btn:hover {
+  background: #00e5ff;
+  color: #000;
+  box-shadow: 0 0 15px #00e5ff;
+}
+
+.char-name-tag {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 24px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 大播放按鈕 */
+.big-play-btn {
+  align-self: center;
+  background: linear-gradient(135deg, #00e5ff, #00b4dc);
+  border: none;
+  padding: 15px 60px;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
+  transition: transform 0.2s;
+}
+
+.big-play-btn:hover {
+  transform: scale(1.1);
+}
+
+.play-icon {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: #000;
+  letter-spacing: 2px;
+}
+
+/* 加在 <style scoped> 裡面 */
+.back-home-btn {
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.back-home-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: #fff;
+}
+
+.go-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 20px 0;
 }
 </style>
