@@ -89,8 +89,8 @@ const maxWaterHeight = CANVAS_HEIGHT * 0.4 // 最高升至40%高度（约272px�
 let player = {
   x: 260,
   y: 630,
-  width: 30,
-  height: 30,
+  width: 266,
+  height: 150,
   vx: 0,
   vy: 0,
   invincible: false,
@@ -575,7 +575,7 @@ const update = () => {
 
 // ----- 绘图部分（保留原配色 + 氛围）-----
 const playerImage = new Image()
-playerImage.src = '../assets/orbit.png'
+playerImage.src = new URL('../assets/orbit.png', import.meta.url).href
 
 const getLevelForSky = () => {
   const s = score.value
