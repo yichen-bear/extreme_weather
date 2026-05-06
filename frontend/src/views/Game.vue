@@ -109,12 +109,60 @@ const maxWaterHeight = CANVAS_HEIGHT * 0.4
 const gameStarted = ref(false)
 const selectedCharIndex = ref(0)
 const characters = [
-  { id: 1, name: '冒險者', icon: '🏃', img: '../assets/fall.png' },
-  { id: 2, name: '太空人', icon: '👨‍🚀', img: '../assets/astronaut.png' },
-  { id: 3, name: '小貓貓', icon: '🐱', img: '../assets/cat.png' },
-  { id: 4, name: '機器人', icon: '🤖', img: '../assets/bot.png' },
-  { id: 5, name: '忍者', icon: '🥷', img: '../assets/ninja.png' },
-  { id: 6, name: '探險家', icon: '🤠', img: '../assets/explorer.png' },
+  {
+    id: 1,
+    name: '球',
+    img: '../assets/fall.png',
+    playW: 50,
+    playH: 75,
+    lobbyW: 100,
+    lobbyH: 150,
+  },
+  {
+    id: 2,
+    name: '毆必',
+    img: '../assets/orbit.png',
+    playW: 50,
+    playH: 75,
+    lobbyW: 100,
+    lobbyH: 150,
+  },
+  {
+    id: 3,
+    name: '春天',
+    img: '../assets/spring.png',
+    playW: 50,
+    playH: 75,
+    lobbyW: 100,
+    lobbyH: 150,
+  },
+  {
+    id: 4,
+    name: '夏天',
+    img: '../assets/summer.png',
+    playW: 50,
+    playH: 75,
+    lobbyW: 100,
+    lobbyH: 150,
+  },
+  {
+    id: 5,
+    name: '秋天',
+    img: '../assets/fall.png',
+    playW: 50,
+    playH: 75,
+    lobbyW: 100,
+    lobbyH: 150,
+  },
+  {
+    id: 6,
+    name: '冬天',
+    img: '../assets/winter.png',
+    playW: 50,
+    playH: 75,
+    lobbyW: 100,
+    lobbyH: 150,
+  },
 ]
 
 const prevChar = () => {
@@ -128,12 +176,15 @@ const nextChar = () => {
 }
 
 const updatePlayerSkin = () => {
-  const char = characters[selectedCharIndex.value]
-  playerImage.src = new URL(char.img, import.meta.url).href
+  const char = characters[selectedCharIndex.value];
+  playerImage.src = new URL(char.img, import.meta.url).href;
   
-  // 確保切換角色時，如果是在大廳，畫面會即時更新
+  // 遊戲邏輯永遠使用「遊玩尺寸」
+  player.width = char.playW;
+  player.height = char.playH;
+  
   if (!gameStarted.value) {
-    draw()
+    draw();
   }
 }
 
@@ -144,8 +195,8 @@ const startGame = () => {
 }
 
 const backToHome = () => {
-  if (animationId) cancelAnimationFrame(animationId) // 停止所有運動
-  
+  if (animationId) cancelAnimationFrame(animationId)
+
   gameOver.value = false
   gameStarted.value = false
   score.value = 0
@@ -153,29 +204,29 @@ const backToHome = () => {
   waterHeight.value = 0
   activeWaterRise.value = false
 
-  // 1. 強制設定角色在大廳的展示位置 (y: 250 附近是中間)
-  player.x = 235 // 水平置中
-  player.y = 250 // 垂直置中
+  const char = characters[selectedCharIndex.value];
+  player.width = char.playW; // 這裡設為小尺寸，確保一開始遊戲就是對的
+  player.height = char.playH;
+  
+  // 設定大廳平台
+  const STAGE_Y = 450; 
+  platforms = [{
+    x: CANVAS_WIDTH / 2 - 40, // 平台可以稍微加寬一點配大角色
+    y: STAGE_Y, 
+    width: 80,
+    height: 12,
+    isFloor: true,
+    isBurning: false,
+  }];
+
+  // 3. 讓角色站在平台正上方
+  player.x = CANVAS_WIDTH / 2 - player.width / 2
+  player.y = STAGE_Y - player.height // 腳底貼齊平台頂部
+
   player.vx = 0
   player.vy = 0
 
-  // 2. 設定腳下的小平台
-  platforms = [{
-    x: 245,
-    y: 325, // 放在角色腳下 (250 + 角色高度 75)
-    width: 30,
-    height: 10,
-    isFloor: true,
-    isBurning: false,
-  }]
-
-  // 3. 關鍵：手動呼叫一次 draw，讓 Canvas 渲染當前座標
-  // 由於圖片載入需要時間，加個 onload 確保第一次進來能看到角色
-  if (playerImage.complete) {
-    draw()
-  } else {
-    playerImage.onload = () => draw()
-  }
+  draw()
 }
 
 let player = {
@@ -792,14 +843,33 @@ const draw = () => {
     }
   })
 
-  // 玩家绘制
+  // 在 draw 函式中尋找繪製玩家的部分
+  const char = characters[selectedCharIndex.value]
+
   if (playerImage.complete && playerImage.naturalWidth > 0) {
-    ctx.drawImage(playerImage, player.x, player.y, player.width, player.height)
-  } else {
-    ctx.fillStyle = '#ff8a65'
-    ctx.beginPath()
-    ctx.arc(player.x + 15, player.y + 15, 14, 0, Math.PI * 2)
-    ctx.fill()
+    if (!gameStarted.value) {
+      // 【大廳展示狀態】使用 lobby 尺寸，並重新計算繪製位置使其置中
+      const displayW = char.lobbyW
+      const displayH = char.lobbyH
+      const STAGE_Y = 450 // 你調整後的舞台高度
+
+      ctx.drawImage(
+        playerImage,
+        CANVAS_WIDTH / 2 - displayW / 2, // 根據大尺寸置中
+        STAGE_Y - displayH, // 腳底踩在舞台上
+        displayW,
+        displayH,
+      )
+    } else {
+      // 【遊戲進行狀態】使用原始 player 尺寸 (playW/H)
+      ctx.drawImage(
+        playerImage, 
+        player.x, 
+        player.y, 
+        player.width, 
+        player.height
+      )
+    }
   }
 
   // 无敌闪烁
@@ -851,7 +921,7 @@ onMounted(() => {
   })
 
   // 確保一進網頁，角色就在中間
-  backToHome() 
+  backToHome()
 })
 
 onUnmounted(() => {
@@ -1139,7 +1209,7 @@ canvas {
   flex-direction: column;
   justify-content: flex-end; /* 讓 UI 集中在下方 */
   padding-bottom: 80px;
-  background: transparent; 
+  background: transparent;
   backdrop-filter: none;
 }
 
