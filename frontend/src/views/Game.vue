@@ -111,12 +111,12 @@ const selectedCharIndex = ref(0)
 const characters = [
   {
     id: 1,
-    name: '球',
-    img: '../assets/fall.png',
-    playW: 50,
-    playH: 75,
-    lobbyW: 150,
-    lobbyH: 225,
+    name: '小球',
+    img: null,
+    playW: 30,
+    playH: 30,
+    lobbyW: 100,
+    lobbyH: 100,
   },
   {
     id: 2,
@@ -177,23 +177,22 @@ const nextChar = () => {
 
 const updatePlayerSkin = () => {
   const char = characters[selectedCharIndex.value];
-  
-  // 1. 建立正確的路徑 (刪掉後面的)
-  const imagePath = new URL(char.img, import.meta.url).href;
-  
-  // 2. 監聽載入事件
-  playerImage.onload = () => {
-    if (!gameStarted.value) {
-      draw();
-    }
-  };
-  
-  // 3. 設定來源
-  playerImage.src = imagePath;
-  
-  // 4. 同步更新遊戲邏輯用的尺寸
+
+  // 更新遊戲尺寸
   player.width = char.playW;
   player.height = char.playH;
+
+  if (char.img) {
+    // 如果是圖片角色
+    const imagePath = new URL(char.img, import.meta.url).href;
+    playerImage.onload = () => {
+      if (!gameStarted.value) draw();
+    };
+    playerImage.src = imagePath;
+  } else {
+    // 如果是球（無圖片）
+    if (!gameStarted.value) draw();
+  }
 };
 
 const startGame = () => {
@@ -212,20 +211,22 @@ const backToHome = () => {
   waterHeight.value = 0
   activeWaterRise.value = false
 
-  const char = characters[selectedCharIndex.value];
-  player.width = char.playW; // 這裡設為小尺寸，確保一開始遊戲就是對的
-  player.height = char.playH;
-  
+  const char = characters[selectedCharIndex.value]
+  player.width = char.playW // 這裡設為小尺寸，確保一開始遊戲就是對的
+  player.height = char.playH
+
   // 設定大廳平台
-  const STAGE_Y = 450; 
-  platforms = [{
-    x: CANVAS_WIDTH / 2 - 40, // 平台可以稍微加寬一點配大角色
-    y: STAGE_Y, 
-    width: 80,
-    height: 12,
-    isFloor: true,
-    isBurning: false,
-  }];
+  const STAGE_Y = 450
+  platforms = [
+    {
+      x: CANVAS_WIDTH / 2 - 40, // 平台可以稍微加寬一點配大角色
+      y: STAGE_Y,
+      width: 80,
+      height: 12,
+      isFloor: true,
+      isBurning: false,
+    },
+  ]
 
   // 3. 讓角色站在平台正上方
   player.x = CANVAS_WIDTH / 2 - player.width / 2
@@ -851,10 +852,27 @@ const draw = () => {
     }
   })
 
-  // 在 draw 函式中尋找繪製玩家的部分
+  // 在 draw 函式中尋找畫角色的區段
   const char = characters[selectedCharIndex.value]
 
-  if (playerImage.complete && playerImage.naturalWidth > 0) {
+  if (!char.img) {
+    // --- 畫球的邏輯 ---
+    ctx.fillStyle = '#ff8a65' // 球的顏色
+    ctx.beginPath()
+
+    if (!gameStarted.value) {
+      // 大廳展示：畫在舞台中心
+      const STAGE_Y = 400
+      const radius = char.lobbyW / 2
+      ctx.arc(CANVAS_WIDTH / 2, STAGE_Y - radius, radius, 0, Math.PI * 2)
+    } else {
+      // 遊戲進行中：跟隨玩家座標
+      const radius = player.width / 2
+      ctx.arc(player.x + radius, player.y + radius, radius, 0, Math.PI * 2)
+    }
+    ctx.fill()
+    ctx.closePath()
+  } else if (playerImage.complete && playerImage.naturalWidth > 0) {
     if (!gameStarted.value) {
       // 【大廳展示狀態】使用 lobby 尺寸，並重新計算繪製位置使其置中
       const displayW = char.lobbyW
@@ -870,20 +888,14 @@ const draw = () => {
       )
     } else {
       // 【遊戲進行狀態】使用原始 player 尺寸 (playW/H)
-      ctx.drawImage(
-        playerImage, 
-        player.x, 
-        player.y, 
-        player.width, 
-        player.height
-      )
+      ctx.drawImage(playerImage, player.x, player.y, player.width, player.height)
     }
   } else {
     ctx.fillStyle = 'red'
     ctx.fillRect(player.x, player.y, player.width, player.height)
   }
 
-  // 无敌闪烁
+ // 无敌闪烁
   if (player.invincible && frameCount % 6 < 3) {
     ctx.globalAlpha = 0.5
     ctx.fillStyle = '#ffffff'
