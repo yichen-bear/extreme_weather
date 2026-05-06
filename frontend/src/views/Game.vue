@@ -115,17 +115,17 @@ const characters = [
     img: '../assets/fall.png',
     playW: 50,
     playH: 75,
-    lobbyW: 100,
-    lobbyH: 150,
+    lobbyW: 150,
+    lobbyH: 225,
   },
   {
     id: 2,
     name: '毆必',
     img: '../assets/orbit.png',
     playW: 50,
-    playH: 75,
-    lobbyW: 100,
-    lobbyH: 150,
+    playH: 50,
+    lobbyW: 200,
+    lobbyH: 200,
   },
   {
     id: 3,
@@ -133,8 +133,8 @@ const characters = [
     img: '../assets/spring.png',
     playW: 50,
     playH: 75,
-    lobbyW: 100,
-    lobbyH: 150,
+    lobbyW: 150,
+    lobbyH: 225,
   },
   {
     id: 4,
@@ -142,8 +142,8 @@ const characters = [
     img: '../assets/summer.png',
     playW: 50,
     playH: 75,
-    lobbyW: 100,
-    lobbyH: 150,
+    lobbyW: 150,
+    lobbyH: 225,
   },
   {
     id: 5,
@@ -151,8 +151,8 @@ const characters = [
     img: '../assets/fall.png',
     playW: 50,
     playH: 75,
-    lobbyW: 100,
-    lobbyH: 150,
+    lobbyW: 150,
+    lobbyH: 225,
   },
   {
     id: 6,
@@ -160,8 +160,8 @@ const characters = [
     img: '../assets/winter.png',
     playW: 50,
     playH: 75,
-    lobbyW: 100,
-    lobbyH: 150,
+    lobbyW: 150,
+    lobbyH: 225,
   },
 ]
 
@@ -177,16 +177,24 @@ const nextChar = () => {
 
 const updatePlayerSkin = () => {
   const char = characters[selectedCharIndex.value];
-  playerImage.src = new URL(char.img, import.meta.url).href;
   
-  // 遊戲邏輯永遠使用「遊玩尺寸」
+  // 1. 建立正確的路徑 (刪掉後面的)
+  const imagePath = new URL(char.img, import.meta.url).href;
+  
+  // 2. 監聽載入事件
+  playerImage.onload = () => {
+    if (!gameStarted.value) {
+      draw();
+    }
+  };
+  
+  // 3. 設定來源
+  playerImage.src = imagePath;
+  
+  // 4. 同步更新遊戲邏輯用的尺寸
   player.width = char.playW;
   player.height = char.playH;
-  
-  if (!gameStarted.value) {
-    draw();
-  }
-}
+};
 
 const startGame = () => {
   gameStarted.value = true
@@ -870,6 +878,9 @@ const draw = () => {
         player.height
       )
     }
+  } else {
+    ctx.fillStyle = 'red'
+    ctx.fillRect(player.x, player.y, player.width, player.height)
   }
 
   // 无敌闪烁
