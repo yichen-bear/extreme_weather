@@ -738,7 +738,7 @@ const update = () => {
       // 回到上一個停留的平台
       player.x = lastPlatform.x
       player.y = lastPlatform.y
-      player.vy = JUMP_FORCE
+      player.vy = 0
       player.invincible = true
       setTimeout(() => {
         if (player) player.invincible = false
