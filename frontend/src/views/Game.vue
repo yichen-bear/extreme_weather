@@ -13,7 +13,12 @@
         <div class="health-area">
           <span v-for="i in Math.floor(playerLives)" :key="i" class="heart">❤️</span>
           <span v-if="playerLives % 1 !== 0" class="heart half">💔</span>
-          <span v-for="i in Math.max(0, 2 - Math.ceil(playerLives))" :key="'lost' + i" class="heart lost">🖤</span>
+          <span
+            v-for="i in Math.max(0, 2 - Math.ceil(playerLives))"
+            :key="'lost' + i"
+            class="heart lost"
+            >🖤</span
+          >
         </div>
 
         <div class="altitude-area">
@@ -208,6 +213,7 @@ const backToHome = () => {
   playerLives.value = 2
   waterHeight.value = 0
   activeWaterRise.value = false
+  windDirection = 0
 
   const char = characters[selectedCharIndex.value]
   player.width = char.playW // 這裡設為小尺寸，確保一開始遊戲就是對的
@@ -894,7 +900,7 @@ const draw = () => {
     ctx.fillRect(player.x, player.y, player.width, player.height)
   }
 
-  // 无敌闪烁
+  // 受傷閃爍
   if (player.invincible && frameCount % 6 < 3) {
     ctx.globalAlpha = 0.5
     ctx.fillStyle = '#ffffff'
@@ -902,13 +908,14 @@ const draw = () => {
     ctx.globalAlpha = 1
   }
 
-  // 在 draw 函數內呼叫 (傳入剛才計算的 windDirection)
+  if (gameStarted.value && !gameOver.value) {
   drawWindIndicator(windDirection)
+}
 }
 
 // 在 draw 函數末尾添加
 const drawWindIndicator = (direction) => {
-  if (direction === 0) return
+  if (direction === 0 || !gameStarted.value) return
 
   ctx.save()
   ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
@@ -969,37 +976,36 @@ onUnmounted(() => {
     0 24px 64px rgba(0, 0, 0, 0.55);
 }
 .nav-buttons {
-  margin-top: 50px;
   position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
+  top: 70px; /* 調整到 HUD 下方一點的位置 */
+  left: 16px;
+  z-index: 40; /* 確保在選單層之上 */
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .nav-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 11px;
-  font-family: var(--font-body, 'DM Sans', sans-serif);
-  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  /* 改用半透明深背景,增加對比度 */
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
-  backdrop-filter: blur(6px);
-  transition:
-    background 0.2s,
-    border-color 0.2s;
+  transition: all 0.3s ease;
 }
 .nav-btn:hover {
-  background: rgba(0, 180, 220, 0.25);
-  border-color: rgba(0, 229, 255, 0.45);
-  color: #fff;
+  /* 懸停時變亮並增加霓虹邊框感 */
+  background: rgba(0, 229, 255, 0.2);
+  border-color: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+  transform: translateY(-2px);
 }
 canvas {
   display: block;
