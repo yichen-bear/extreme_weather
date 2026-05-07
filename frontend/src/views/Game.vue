@@ -57,8 +57,17 @@
         </div>
       </Transition>
 
-      <!-- Start Menu / Character Selection -->
-      <!-- 首頁選單 UI (與 Canvas 並存) -->
+      <Transition name="fade">
+        <div v-if="showLevelPopup" class="level-popup-overlay">
+          <div class="level-popup-panel">
+            <div class="lp-eyebrow">NEW CHALLENGE</div>
+            <h2 class="lp-title">{{ nextLevelInfo.title }}</h2>
+            <p class="lp-desc">{{ nextLevelInfo.desc }}</p>
+            <div class="lp-hint">點擊 Enter 繼續挑戰</div>
+          </div>
+        </div>
+      </Transition>
+
       <Transition name="fade">
         <div v-if="!gameStarted" class="home-menu-layer">
           <!-- 角色切換控制 -->
@@ -111,6 +120,8 @@ let currentWaterRiseSpeed = 0.08
 const maxWaterHeight = CANVAS_HEIGHT * 0.4
 const gameStarted = ref(false)
 const selectedCharIndex = ref(0)
+const showLevelPopup = ref(false)
+const nextLevelInfo = ref({ title: '', desc: '' })
 const characters = [
   {
     id: 1,
@@ -167,6 +178,13 @@ const characters = [
     lobbyH: 225,
   },
 ]
+
+const LEVEL_DATA = {
+  1: { title: '💧 波濤洪水', desc: '水位將持續上升，別被淹沒了！' },
+  2: { title: '🔥 野火燎原', desc: '部分平台會著火，停留會受傷。' },
+  3: { title: '🌀 狂風大作', desc: '強大的陣風會干擾你的跳躍方向。' },
+  4: { title: '⚡ 最終試煉', desc: '結合所有災難，挑戰巔峰吧！' },
+}
 
 const prevChar = () => {
   selectedCharIndex.value = (selectedCharIndex.value - 1 + characters.length) % characters.length
@@ -508,7 +526,7 @@ const updateWaterRise = () => {
 }
 
 const update = () => {
-  if (gameOver.value) return
+  if (gameOver.value || showLevelPopup.value) return
 
   const level = getCurrentLevel()
   let currentGravity = GRAVITY
@@ -693,6 +711,15 @@ const update = () => {
         player.y + player.height > p.y &&
         player.y + player.height < p.y + p.height + 15
       ) {
+        if (p.isBoundary && !p.hasTriggered) {
+          const level = getCurrentLevel()
+          if (LEVEL_DATA[level]) {
+            nextLevelInfo.value = LEVEL_DATA[level]
+            showLevelPopup.value = true
+            p.hasTriggered = true // 避免重複觸發
+          }
+        }
+
         player.vy = currentJumpForce
         lastPlatform.x = player.x
         lastPlatform.y = p.y - player.height
@@ -909,8 +936,8 @@ const draw = () => {
   }
 
   if (gameStarted.value && !gameOver.value) {
-  drawWindIndicator(windDirection)
-}
+    drawWindIndicator(windDirection)
+  }
 }
 
 // 在 draw 函數末尾添加
@@ -944,6 +971,10 @@ onMounted(() => {
   ctx = gameCanvas.value.getContext('2d')
   window.addEventListener('keydown', (e) => {
     keys[e.key] = true
+
+    if (e.key === 'Enter' && showLevelPopup.value) {
+      showLevelPopup.value = false
+    }
   })
   window.addEventListener('keyup', (e) => {
     keys[e.key] = false
@@ -1346,5 +1377,58 @@ canvas {
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   margin: 20px 0;
+}
+
+.level-popup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.level-popup-panel {
+  background: linear-gradient(145deg, #1a2a3a, #0d1a24);
+  border: 2px solid #00e5ff;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+  max-width: 80%;
+}
+
+.lp-eyebrow {
+  color: #00e5ff;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.lp-title {
+  color: #fff;
+  font-size: 32px;
+  margin: 0 0 15px 0;
+}
+
+.lp-desc {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.lp-hint {
+  color: #ffd966;
+  font-size: 14px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>
