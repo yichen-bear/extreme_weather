@@ -1233,6 +1233,7 @@ canvas {
   padding-bottom: 80px;
   background: transparent;
   backdrop-filter: none;
+  pointer-events: none;
 }
 
 /* 角色切換器容器 */
@@ -1242,6 +1243,7 @@ canvas {
   justify-content: center;
   gap: 40px;
   margin-bottom: 20px;
+  pointer-events: auto;
 }
 
 .arrow-btn {
@@ -1285,6 +1287,7 @@ canvas {
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
   transition: transform 0.2s;
+  pointer-events: auto;
 }
 
 .big-play-btn:hover {
