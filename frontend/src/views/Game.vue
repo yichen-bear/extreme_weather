@@ -13,9 +13,7 @@
         <div class="health-area">
           <span v-for="i in Math.floor(playerLives)" :key="i" class="heart">❤️</span>
           <span v-if="playerLives % 1 !== 0" class="heart half">💔</span>
-          <span v-for="i in 2 - Math.ceil(playerLives)" :key="'lost' + i" class="heart lost"
-            >🖤</span
-          >
+          <span v-for="i in Math.max(0, 2 - Math.ceil(playerLives))" :key="'lost' + i" class="heart lost">🖤</span>
         </div>
 
         <div class="altitude-area">
@@ -176,24 +174,24 @@ const nextChar = () => {
 }
 
 const updatePlayerSkin = () => {
-  const char = characters[selectedCharIndex.value];
+  const char = characters[selectedCharIndex.value]
 
   // 更新遊戲尺寸
-  player.width = char.playW;
-  player.height = char.playH;
+  player.width = char.playW
+  player.height = char.playH
 
   if (char.img) {
     // 如果是圖片角色
-    const imagePath = new URL(char.img, import.meta.url).href;
+    const imagePath = new URL(char.img, import.meta.url).href
     playerImage.onload = () => {
-      if (!gameStarted.value) draw();
-    };
-    playerImage.src = imagePath;
+      if (!gameStarted.value) draw()
+    }
+    playerImage.src = imagePath
   } else {
     // 如果是球（無圖片）
-    if (!gameStarted.value) draw();
+    if (!gameStarted.value) draw()
   }
-};
+}
 
 const startGame = () => {
   gameStarted.value = true
@@ -509,7 +507,6 @@ const update = () => {
   const level = getCurrentLevel()
   let currentGravity = GRAVITY
   let currentJumpForce = JUMP_FORCE
-  // 最终试炼提高难度（重力加大、跳跃略强但更考验操作）
   if (level === 3) {
     currentGravity = 0.32
     currentJumpForce = -9.2
@@ -549,9 +546,9 @@ const update = () => {
   if (player.x < 0) player.x = CANVAS_WIDTH
 
   // 屏幕向上滚动（登山核心）
-  if (player.y < CANVAS_HEIGHT / 2) {
-    let diff = CANVAS_HEIGHT / 2 - player.y
-    player.y = CANVAS_HEIGHT / 2
+  if (player.y + player.height < CANVAS_HEIGHT * 0.6) {
+    let diff = CANVAS_HEIGHT * 0.6 - (player.y + player.height)
+    player.y = CANVAS_HEIGHT * 0.6 - player.height
 
     score.value += diff * 0.1
 
@@ -682,6 +679,8 @@ const update = () => {
   // 洪水水位獨立更新（每幀都上升，不依賴於滾動）
   if (player.vy > 0) {
     platforms.forEach((p) => {
+      const padding = (player.width - 10) / 2
+
       if (
         player.x + 10 < p.x + p.width &&
         player.x + player.width - 10 > p.x &&
@@ -895,7 +894,7 @@ const draw = () => {
     ctx.fillRect(player.x, player.y, player.width, player.height)
   }
 
- // 无敌闪烁
+  // 无敌闪烁
   if (player.invincible && frameCount % 6 < 3) {
     ctx.globalAlpha = 0.5
     ctx.fillStyle = '#ffffff'
@@ -1310,9 +1309,23 @@ canvas {
   padding: 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 17px;
   transition: all 0.2s;
 }
+
+/* .restart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ff6b35;
+  border: none;
+  color: #fff;
+  padding: 12px 28px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 4px;
+} */
 
 .back-home-btn:hover {
   background: rgba(255, 255, 255, 0.1);
