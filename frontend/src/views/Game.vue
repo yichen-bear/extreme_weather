@@ -483,16 +483,27 @@ const resetGame = () => {
 }
 
 // 受到伤害
-const applyDamage = () => {
+const applyDamage = (amount) => {
   if (player.invincible) return
-  playerLives.value -= 0.5
+  
+  playerLives.value -= amount
+  
+  // 核心規則：一旦心 <= 0 遊戲結束
   if (playerLives.value <= 0) {
+    playerLives.value = 0
     gameOver.value = true
+    return
   }
+  
+  // 重生位置與微小跳躍力 (避免畫面捲動)
+  player.x = lastPlatform.x
+  player.y = lastPlatform.y
+  player.vy = -3 
+
   player.invincible = true
   setTimeout(() => {
     if (player) player.invincible = false
-  }, 500)
+  }, 1000)
 }
 
 const updateWaterRise = () => {
@@ -521,7 +532,7 @@ const updateWaterRise = () => {
 
   // 3. 判定死亡
   if (player.y + player.height > CANVAS_HEIGHT - waterHeight.value) {
-    gameOver.value = true
+    applyDamage(0.5)
   }
 }
 
@@ -725,27 +736,15 @@ const update = () => {
         lastPlatform.y = p.y - player.height
 
         if (p.isBurning && !p.isFloor) {
-          applyDamage()
+          applyDamage(0.5)
         }
       }
     })
   }
 
+  // B. 沒踩到階梯掉到畫面外（或掉進水裡）
   if (player.y > CANVAS_HEIGHT - waterHeight.value) {
-    // 掉落復活機制：檢查是否還有生命
-    if (playerLives.value > 0.5) {
-      playerLives.value -= 1.5
-      // 回到上一個停留的平台
-      player.x = lastPlatform.x
-      player.y = lastPlatform.y
-      player.vy = 0
-      player.invincible = true
-      setTimeout(() => {
-        if (player) player.invincible = false
-      }, 1000)
-    } else {
-      gameOver.value = true
-    }
+    applyDamage(1.5) 
   }
 
   // 洪水水位獨立更新（每幀都上升，不依賴於玩家移動）
@@ -1428,7 +1427,12 @@ canvas {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>
