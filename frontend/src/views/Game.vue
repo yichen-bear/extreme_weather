@@ -26,7 +26,7 @@
           <div class="altitude-value">{{ Math.floor(score) }}<span class="alt-unit">m</span></div>
         </div>
 
-        <div class="level-area">
+        <div v-if="gameStarted" class="level-area">
           {{ currentLevelName }}
         </div>
       </div>
@@ -233,6 +233,7 @@ const backToHome = () => {
   waterHeight.value = 0
   activeWaterRise.value = false
   windDirection = 0
+  currentLevelName.value = '🌱 新手訓練'
 
   const char = characters[selectedCharIndex.value]
   player.width = char.playW // 這裡設為小尺寸，確保一開始遊戲就是對的
@@ -1060,8 +1061,13 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  display: block;
+  height: 60px;
 }
 .health-area {
+  position: absolute;
+  left: 16px;
+  top: 15px; 
   font-size: 22px;
   letter-spacing: 2px;
   min-width: 70px;
@@ -1073,8 +1079,11 @@ canvas {
   opacity: 0.3;
 }
 .altitude-area {
+  position: absolute;
+  left: 50%;
+  top: 12px; /* 與 hud 的 padding 保持一致 */
+  transform: translateX(-50%);
   text-align: center;
-  flex: 1;
 }
 .altitude-label {
   font-family: var(--font-disp, 'Bebas Neue', sans-serif);
@@ -1094,6 +1103,9 @@ canvas {
   color: rgba(255, 255, 255, 0.55);
 }
 .level-area {
+  position: absolute;
+  right: 16px;
+  top: 12px;
   background: rgba(0, 0, 0, 0.55);
   padding: 6px 12px;
   border-radius: 24px;
