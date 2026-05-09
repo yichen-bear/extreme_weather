@@ -1372,20 +1372,6 @@ canvas {
   transition: all 0.2s;
 }
 
-/* .restart-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #ff6b35;
-  border: none;
-  color: #fff;
-  padding: 12px 28px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  cursor: pointer;
-  border-radius: 4px;
-} */
-
 .back-home-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
