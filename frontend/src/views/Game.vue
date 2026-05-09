@@ -111,6 +111,7 @@ const PLATFORM_MIN_WIDTH = 50
 const PLATFORM_MAX_WIDTH = 90
 let windDirection = 0
 const generatedBoundaries = ref([])
+const triggeredLevels = ref([])
 
 // 水位相关（平衡后速度）
 const activeWaterRise = ref(false)
@@ -477,6 +478,7 @@ const resetGame = () => {
   activeWaterRise.value = false
   player.invincible = false
   currentWaterRiseSpeed = 0.08
+  triggeredLevels.value = []
   generatedBoundaries.value = []
   initPlatforms()
   updateLevelEffects()
@@ -485,20 +487,20 @@ const resetGame = () => {
 // 受到伤害
 const applyDamage = (amount) => {
   if (player.invincible) return
-  
+
   playerLives.value -= amount
-  
+
   // 核心規則：一旦心 <= 0 遊戲結束
   if (playerLives.value <= 0) {
     playerLives.value = 0
     gameOver.value = true
     return
   }
-  
+
   // 重生位置與微小跳躍力 (避免畫面捲動)
   player.x = lastPlatform.x
   player.y = lastPlatform.y
-  player.vy = -3 
+  player.vy = -3
 
   player.invincible = true
   setTimeout(() => {
@@ -586,7 +588,22 @@ const update = () => {
     player.y = CANVAS_HEIGHT * 0.6 - player.height
 
     score.value += diff * 0.1
+    const levelThresholds = [200, 400, 600, 800]
+    levelThresholds.forEach((threshold, index) => {
+      // 1. 檢查分數是否達標
+      // 2. 檢查這個門檻是否已經觸發過 (避免重複彈窗)
+      if (score.value >= threshold && !triggeredLevels.value.includes(threshold)) {
+        // 立即標記為已觸發
+        triggeredLevels.value.push(threshold)
 
+        // 根據索引取得對應的關卡資料 (index 0 是 200m，對應 LEVEL_DATA[1])
+        const levelNum = index + 1
+        if (LEVEL_DATA[levelNum]) {
+          nextLevelInfo.value = LEVEL_DATA[levelNum]
+          showLevelPopup.value = true
+        }
+      }
+    })
     platforms.forEach((p) => {
       p.y += diff
       if (p.y > CANVAS_HEIGHT) {
@@ -722,15 +739,6 @@ const update = () => {
         player.y + player.height > p.y &&
         player.y + player.height < p.y + p.height + 15
       ) {
-        if (p.isBoundary && !p.hasTriggered) {
-          const level = getCurrentLevel()
-          if (LEVEL_DATA[level]) {
-            nextLevelInfo.value = LEVEL_DATA[level]
-            showLevelPopup.value = true
-            p.hasTriggered = true // 避免重複觸發
-          }
-        }
-
         player.vy = currentJumpForce
         lastPlatform.x = player.x
         lastPlatform.y = p.y - player.height
@@ -744,7 +752,7 @@ const update = () => {
 
   // B. 沒踩到階梯掉到畫面外（或掉進水裡）
   if (player.y > CANVAS_HEIGHT - waterHeight.value) {
-    applyDamage(1.5) 
+    applyDamage(1.5)
   }
 
   // 洪水水位獨立更新（每幀都上升，不依賴於玩家移動）
