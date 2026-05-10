@@ -397,7 +397,7 @@ const updateLevelEffects = () => {
     case 4:
       currentLevelName.value = '⚡ 最終試煉'
       activeWaterRise.value = true
-      currentWaterRiseSpeed = 1.2
+      currentWaterRiseSpeed = 1.5
       break
   }
 }
@@ -1143,8 +1143,9 @@ canvas {
   background: #0d1a24;
   border: 1px solid rgba(255, 107, 53, 0.4);
   border-radius: 12px;
-  padding: 40px 52px;
+  padding: 30px 40px;
   text-align: center;
+  min-width: 280px;  
 }
 .go-eyebrow {
   font-family: 'Bebas Neue', sans-serif;
@@ -1169,7 +1170,8 @@ canvas {
   font-size: 20px;
 }
 .restart-btn {
-  display: inline-flex;
+  display: flex;            
+  justify-content: center;  
   align-items: center;
   gap: 8px;
   background: #ff6b35;
@@ -1180,6 +1182,8 @@ canvas {
   font-size: 20px;
   cursor: pointer;
   border-radius: 4px;
+  width: 100%;               
+  box-sizing: border-box;    
 }
 .restart-icon {
   animation: bounce 1.5s infinite;
@@ -1357,19 +1361,22 @@ canvas {
   letter-spacing: 2px;
 }
 
-/* 加在 <style scoped> 裡面 */
 .back-home-btn {
-  display: block;
-  width: 100%;
-  margin-top: 15px;
+  display: flex;            
+  justify-content: center;
+  align-items: center;
+  width: 100%;              
+  margin-top: 12px;         
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: rgba(255, 255, 255, 0.7);
-  padding: 10px;
+  padding: 12px 28px;       
   border-radius: 4px;
   cursor: pointer;
-  font-size: 17px;
+  font-family: 'Bebas Neue', sans-serif; 
+  font-size: 20px;        
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .back-home-btn:hover {

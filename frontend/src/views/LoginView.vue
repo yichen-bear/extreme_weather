@@ -67,11 +67,11 @@ const formData = reactive({
 const handleRedirect = () => {
   const target = route.query.redirect
   if (target === 'play') {
-    router.push('/play')
+    router.push('/game')
   } else if (target === 'map') {
-    router.push({ path: '/gamehome', query: { view: 'map' } })
+    router.push({ path: '/map', query: { view: 'map' } })
   } else {
-    router.push('/gamehome')
+    router.push('/')
   }
 }
 

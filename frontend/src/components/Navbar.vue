@@ -4,8 +4,7 @@
       <router-link to="/" class="nav-logo">Climate Ascent</router-link>
       
       <div class="nav-links">
-        <router-link to="/dashboard" class="nav-item">儀表板</router-link>
-        <router-link to="/gamehome" class="nav-item">遊戲</router-link>
+        <router-link to="/game" class="nav-item">遊戲</router-link>
         <router-link to="/leaderboard" class="nav-item">排行榜</router-link>
 
         <div class="auth-section">

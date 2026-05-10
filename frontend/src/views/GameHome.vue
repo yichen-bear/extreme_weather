@@ -122,7 +122,7 @@ const startGame = () => {
     router.push({ path: '/loginview', query: { redirect: 'play' } });    
     return
   }
-  router.push('/play');
+  router.push('/game');
 };
 
 const handleMapClick = () => {
