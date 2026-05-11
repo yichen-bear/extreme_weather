@@ -102,7 +102,7 @@
         </div>
       </main>
       <div class="btn-container">
-        <button class="play-game-btn" @click="$router.push('/game')">
+        <button class="play-game-btn" @click="startGame">
           <span class="btn-text">進入遊戲</span>
           <span class="btn-sub">START CLIMBING</span>
         </button>
@@ -110,6 +110,24 @@
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { authStore } from '../stores/user'
+
+const router = useRouter()
+
+const startGame = () => {
+  // 檢查登入狀態
+  if (!authStore.isLoggedIn) {
+    alert('請先登入以進入遊戲！');
+    router.push({ path: '/loginview', query: { redirect: 'play' } });    
+    return
+  }
+  router.push('/game');
+};
+</script>
 
 <style scoped>
 .rules-page {
