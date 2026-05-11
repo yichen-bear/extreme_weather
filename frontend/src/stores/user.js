@@ -2,7 +2,7 @@
 import { reactive } from 'vue'
 
 export const authStore = reactive({
-  isLoggedIn: !!localStorage.getItem('token'),
+  isLoggedIn: !!localStorage.getItem('token') || localStorage.getItem('isGuest') === 'true',
   username: localStorage.getItem('username') || '玩家',
   isGuest: localStorage.getItem('isGuest') === 'true', // 標記是否為訪客
   avatar: localStorage.getItem('avatar') || '',
@@ -22,10 +22,11 @@ export const authStore = reactive({
     const guestName = `GUEST_${Math.floor(Math.random() * 9000) + 1000}`; // 產生隨機 ID
     localStorage.setItem('username', guestName);
     localStorage.setItem('isGuest', 'true');
-    // 訪客不需要 token，但我們設定 isLoggedIn 為 true 讓 Navbar 變換
+    localStorage.setItem('avatar', '/user.png');
     this.isLoggedIn = true;
     this.username = guestName;
     this.isGuest = true;
+    this.avatar = '/user.png'
   },
 
   logout() {

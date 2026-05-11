@@ -59,7 +59,7 @@
         <!-- Rules card -->
         <button
           class="menu-card rules-card"
-          @click="startGame"
+          @click="startRules"
           :class="{ active: currentSubView === 'rules' }"
         >
           <div class="card-glow rules-glow"></div>
@@ -123,6 +123,10 @@ const startGame = () => {
     return
   }
   router.push('/game');
+};
+
+const startRules = () => {
+  router.push('/rules');
 };
 
 const handleMapClick = () => {
