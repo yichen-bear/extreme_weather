@@ -4,7 +4,7 @@
       <router-link to="/" class="nav-logo">Climate Ascent</router-link>
       
       <div class="nav-links">
-        <router-link to="/game" class="nav-item">遊戲</router-link>
+        <button v-on:click="startGame" class="nav-item" style="margin-bottom: 3px;">遊戲</button>
         <router-link to="/leaderboard" class="nav-item">排行榜</router-link>
 
         <div class="auth-section">
@@ -14,7 +14,7 @@
           
           <template v-else>
             <div class="user-info">
-              <span class="user-status">{{ authStore.isGuest ? '🚧 訪客' : authStore.username }}</span>
+              <span class="user-status">{{ authStore.isGuest ? '訪客' : authStore.username }}</span>
               <div class="user-avatar">
                 <img v-if="authStore.avatar" :src="authStore.avatar" class="avatar-img">
               </div>
@@ -40,6 +40,16 @@ const handleLogout = () => {
     router.push('/') // 登出後回首頁
   }
 }
+
+const startGame = () => {
+  // 檢查登入狀態
+  if (!authStore.isLoggedIn) {
+    alert('請先登入以進入遊戲！');
+    router.push({ path: '/loginview', query: { redirect: 'play' } });    
+    return
+  }
+  router.push('/game');
+};
 </script>
 
 <style scoped>
@@ -94,6 +104,9 @@ const handleLogout = () => {
   font-weight: 500;
   transition: color 0.3s ease;
   position: relative;
+  background-color: transparent;
+  border: none;
+  padding: 3px;
 }
 
 .nav-item:hover {
