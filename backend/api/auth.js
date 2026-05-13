@@ -8,36 +8,40 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // 註冊路徑: /api/auth/register
 router.post("/register", async (req, res) => {
-	const { username, email, password } = req.body;
-	const defaultAvatar = "/user.png";
+    const { username, email, password } = req.body;
+    const defaultAvatar = "/user.png";
 
-	try {
-		const [existingUser] = await db.execute(
-			"SELECT * FROM users WHERE email = ? OR username = ?",
-			[email, username],
-		);
-		if (existingUser.length > 0)
-			return res.status(400).json({ message: "重複註冊" });
+    try {
+        // 1. 檢查重複（PostgreSQL 使用 $1, $2）
+        const { rows: existingUser } = await db.query(
+            "SELECT * FROM users WHERE email = $1 OR username = $2",
+            [email, username]
+        );
+        if (existingUser.length > 0)
+            return res.status(400).json({ message: "重複註冊" });
 
-		const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-		const [result] = await db.execute(
-			"INSERT INTO users (username, email, password_hash, avatar) VALUES (?, ?, ?, ?)",
-			[username, email, hashedPassword, defaultAvatar],
-		);
+        // 2. 插入資料，包含你新增的 5 個關卡欄位，預設為 0
+        // 注意：這裡共有 9 個欄位，所以要有 $1 到 $9
+        await db.query(
+            "INSERT INTO users (username, email, password_hash, avatar, levelnew, levelflood, levelfire, levelwind, levelfinal) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            [username, email, hashedPassword, defaultAvatar, false, false, false, false, false]
+        );
 
-		res.status(201).json({ message: "註冊成功" });
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ message: "伺服器錯誤" });
-	}
+        res.status(201).json({ message: "註冊成功" });
+    } catch (err) {
+        console.error("註冊詳細錯誤:", err); // 這行能在 Docker 日誌看到具體原因
+        res.status(500).json({ message: "伺服器錯誤" });
+    }
 });
 
 // 登入路徑: /api/auth/login
 router.post("/login", async (req, res) => {
 	const { email, password } = req.body;
 	try {
-		const [users] = await db.execute("SELECT * FROM users WHERE email = ?", [
+		// PostgreSQL 使用 $1，並從 rows 屬性獲取資料
+		const { rows: users } = await db.query("SELECT * FROM users WHERE email = $1", [
 			email,
 		]);
 		if (users.length === 0)
@@ -55,9 +59,16 @@ router.post("/login", async (req, res) => {
             message: "登入成功", 
             token, 
             username: user.username,
-            avatar: user.avatar
+            avatar: user.avatar,
+            // 同時回傳關卡狀態供前端使用
+            levelnew: user.levelnew,
+            levelflood: user.levelflood,
+            levelfire: user.levelfire,
+            levelwind: user.levelwind,
+            levelfinal: user.levelfinal
         });
 	} catch (err) {
+        console.error("登入錯誤:", err);
 		res.status(500).json({ message: "伺服器錯誤" });
 	}
 });
@@ -67,41 +78,39 @@ router.post("/google", async (req, res) => {
 	const { idToken } = req.body;
 
 	try {
-		// 驗證 Google ID Token
 		const ticket = await client.verifyIdToken({
 			idToken: idToken,
 			audience: process.env.GOOGLE_CLIENT_ID,
 		});
 		const payload = ticket.getPayload();
-		const { email, name, picture, sub: googleId } = payload; // sub 是 Google 的唯一 ID
+		const { email, name, picture } = payload; 
 
-		// 1. 檢查資料庫是否有此 Google 用戶或 Email
-		let [users] = await db.execute("SELECT * FROM users WHERE email = ?", [
+		// 1. 檢查資料庫是否有此 Google 用戶，同步更新為 PostgreSQL 語法
+		let { rows: users } = await db.query("SELECT * FROM users WHERE email = $1", [
 			email,
 		]);
 		let user;
 
 		if (users.length === 0) {
-			// 2. 如果是第一次登入，自動註冊 (密碼隨機或為空，因為是第三方登入)
-			await db.execute(
-				"INSERT INTO users (username, email, password_hash, avatar) VALUES (?, ?, ?, ?)",
-				[name, email, "GOOGLE_AUTH_EXTERNAL", picture],
+			// 2. 自動註冊，並包含預設的關卡欄位
+			await db.query(
+				"INSERT INTO users (username, email, password_hash, avatar, levelnew, levelflood, levelfire, levelwind, levelfinal) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+				[name, email, "GOOGLE_AUTH_EXTERNAL", picture, 0, 0, 0, 0, 0],
 			);
-			const [newUsers] = await db.execute(
-				"SELECT * FROM users WHERE email = ?",
+			const { rows: newUsers } = await db.query(
+				"SELECT * FROM users WHERE email = $1",
 				[email],
 			);
 			user = newUsers[0];
 		} else {
 			user = users[0];
-			// 如果使用者換了 Google 大頭貼，可以順便更新資料庫
-			await db.execute("UPDATE users SET avatar = ? WHERE id = ?", [
+			// 更新大頭貼
+			await db.query("UPDATE users SET avatar = $1 WHERE id = $2", [
 				picture,
 				user.id,
 			]);
 		}
 
-		// 3. 簽發你自己專案的 JWT (沿用你原本的邏輯)
 		const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
 			expiresIn: "24h",
 		});
@@ -110,7 +119,12 @@ router.post("/google", async (req, res) => {
 			message: "Google 登入成功",
 			token,
 			username: user.username,
-			avatar: picture, // 回傳圖片網址給前端
+			avatar: picture,
+            levelnew: user.levelnew,
+            levelflood: user.levelflood,
+            levelfire: user.levelfire,
+            levelwind: user.levelwind,
+            levelfinal: user.levelfinal
 		});
 	} catch (err) {
 		console.error("Google Auth Error:", err);
