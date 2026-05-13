@@ -1,16 +1,23 @@
-require('dotenv').config(); // 管理密碼的套件
-const mysql = require('mysql2/promise');
+require("dotenv").config();
+const { Pool } = require("pg");
 
-// 建立連線池
-const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+const db = new Pool({
+	connectionString: process.env.DATABASE_URL,
+	ssl: { rejectUnauthorized: false },
+	connectionTimeoutMillis: 10000,
+});
+
+// 新增這段測試邏輯
+db.connect((err, client, release) => {
+	if (err) {
+		// 改成這樣，印出完整的 err 物件
+		return console.error(
+			"❌ 連接到 Neon 失敗，完整原因：",
+			JSON.stringify(err, null, 2) || err.stack || err,
+		);
+	}
+	console.log("✅ 成功連接到 Neon 資料庫！");
+	release();
 });
 
 module.exports = db;
