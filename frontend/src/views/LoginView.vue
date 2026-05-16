@@ -9,28 +9,29 @@
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div v-if="!isLogin" class="input-group">
           <label>USERNAME</label>
-          <input v-model="formData.username" type="text" placeholder="輸入玩家名稱" required />
+          <input v-model="formData.username" type="text" placeholder="輸入玩家名稱" :disabled="isLoading" required />
         </div>
 
         <div class="input-group">
           <label>EMAIL</label>
-          <input v-model="formData.email" type="email" placeholder="輸入電子郵件" required />
+          <input v-model="formData.email" type="email" placeholder="輸入電子郵件" :disabled="isLoading" required />
         </div>
 
         <div class="input-group">
           <label>PASSWORD</label>
-          <input v-model="formData.password" type="password" placeholder="輸入密碼" required />
+          <input v-model="formData.password" type="password" placeholder="輸入密碼" :disabled="isLoading" required />
         </div>
 
-        <button type="submit" class="submit-btn">
-          {{ isLogin ? '進入系統' : '建立帳號' }}
+        <button type="submit" class="submit-btn" :disabled="isLoading">
+          <span v-if="isLoading">伺服器喚醒中，請稍候 (約60秒)...</span>
+          <span v-else>{{ isLogin ? '進入系統' : '建立帳號' }}</span>
         </button>
 
-        <button type="button" class="guest-btn" @click="handleGuestLogin">
+        <button type="button" class="guest-btn" @click="handleGuestLogin" :disabled="isLoading">
           以訪客身分快速體驗
         </button>
 
-        <div class="google-btn-wrapper">
+        <div class="google-btn-wrapper" :style="{ pointerEvents: isLoading ? 'none' : 'auto', opacity: isLoading ? 0.5 : 1 }">
           <img
             class="googlepic"
             src="../assets/google.jpg"
@@ -41,7 +42,7 @@
       </form>
 
       <div class="auth-footer">
-        <button @click="isLogin = !isLogin" class="switch-btn">
+        <button @click="isLogin = !isLogin" class="switch-btn" :disabled="isLoading">
           {{ isLogin ? '還沒有帳號？點此註冊' : '已有帳號？返回登入' }}
         </button>
       </div>
@@ -58,6 +59,10 @@ import { authStore } from '../stores/user'
 const router = useRouter()
 const route = useRoute()
 const isLogin = ref(true)
+
+// 💡 步驟 1：新增控制載入狀態的變數
+const isLoading = ref(false)
+
 const formData = reactive({
   username: '',
   email: '',
@@ -77,9 +82,15 @@ const handleRedirect = () => {
 
 const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
+  
+  // 💡 步驟 2：發送請求前，開啟載入狀態
+  isLoading.value = true
+  
   try {
+    // 這裡整合了你先前搬到環境變數的寫法
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
     const res = await axios.post(`${baseURL}${endpoint}`, formData)
+    
     if (isLogin.value) {
       authStore.login(res.data.token, res.data.username, res.data.avatar)
       alert('登入成功！')
@@ -91,6 +102,9 @@ const handleSubmit = async () => {
   } catch (err) {
     console.error(err)
     alert(err.response?.data?.message || '操作失敗')
+  } finally {
+    // 💡 步驟 3：不論成功或失敗（try 或 catch 結束後），都要關閉載入狀態
+    isLoading.value = false
   }
 }
 
@@ -102,8 +116,9 @@ const handleGuestLogin = () => {
 
 // 修正後的 Google 登入處理
 const handleGoogleResponse = async (response) => {
+  // 💡 Google 登入同樣需要控管載入狀態
+  isLoading.value = true
   try {
-    // response.credential 是 Google 回傳的 ID Token
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
     const res = await axios.post(`${baseURL}/api/auth/google`, {
       idToken: response.credential
@@ -114,6 +129,8 @@ const handleGoogleResponse = async (response) => {
   } catch (err) {
     console.error('Google 驗證失敗詳情:', err.response?.data)
     alert('Google 驗證失敗')
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -245,6 +262,13 @@ onMounted(() => {
   box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
 }
 
+.submit-btn:disabled {
+  background: #555555;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .switch-btn {
   background: none;
   border: none;
@@ -275,6 +299,12 @@ onMounted(() => {
   color: #fff;
   border-color: #00e5ff;
   background: rgba(0, 229, 255, 0.05);
+}
+
+.guest-btn:disabled {
+  border-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
 }
 
 .google-btn-wrapper {

@@ -180,6 +180,50 @@ const characters = [
   },
 ]
 
+// 1. 數字關卡與資料庫欄位白名單的對應表
+const LEVEL_COLUMN_MAP = {
+  0: "levelnew",     // 🌱 新手訓練
+  1: "levelflood",    // 💧 波濤洪水
+  2: "levelfire",     // 🔥 野火燎原
+  3: "levelwind",     // 🌀 狂風大作
+  4: "levelfinal"     // ⚡ 最終試煉
+};
+
+// 2. 自行定義一個發送請求給後端 score.js 的函式
+const updateBackendLevel = async (levelNum) => {
+  const columnName = LEVEL_COLUMN_MAP[levelNum];
+  if (!columnName) return;
+
+  // 從登入時存入的 localStorage 抓取 Token
+  const token = localStorage.getItem('token'); 
+  if (!token) {
+    console.log('未登入，通關紀錄將不會同步至資料庫。');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/score/update-level', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // 帶入驗證 Token
+      },
+      body: JSON.stringify({
+        levelColumn: columnName // 帶入白名單字串
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      console.log(`✅ 資料庫更新成功：${columnName} 已設定為通關！`);
+    } else {
+      console.error('資料庫更新失敗:', data.message);
+    }
+  } catch (err) {
+    console.error('連線後端 Score API 發生錯誤:', err);
+  }
+};
+
 const LEVEL_DATA = {
   1: { title: '💧 波濤洪水', desc: '水位將持續上升，別被淹沒了！' },
   2: { title: '🔥 野火燎原', desc: '部分平台會著火，停留會受傷。' },
@@ -602,16 +646,7 @@ const update = () => {
         if (LEVEL_DATA[levelNum]) {
           nextLevelInfo.value = LEVEL_DATA[levelNum]
           showLevelPopup.value = true
-
-          if (threshold === 200) {
-            updateLevelInDatabase('levelnew')
-          } else if (threshold === 400) {
-            updateLevelInDatabase('levelflood')
-          } else if (threshold === 600) {
-            updateLevelInDatabase('levelfire')
-          } else if (threshold === 800) {
-            updateLevelInDatabase('levelwind')
-          }
+          updateBackendLevel(index);
         }
       }
     })
@@ -985,39 +1020,6 @@ const loop = () => {
   animationId = requestAnimationFrame(loop)
 }
 
-
-// 新增：將通關紀錄同步到後端 Neon 資料庫
-const updateLevelInDatabase = async (levelColumn) => {
-  // 從 localStorage 拿到登入時存下來的 token
-  const token = localStorage.getItem('token') 
-  
-  if (!token) {
-    console.log('玩家未登入，不記錄關卡成績')
-    return
-  }
-
-  try {
-    const response = await fetch('/api/auth/update-level', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 帶上 JWT Token 供 auth.js 驗證
-      },
-      body: JSON.stringify({
-        levelColumn: levelColumn // 傳送要打勾的欄位名稱，例如 'levelflood'
-      })
-    })
-
-    const data = await response.json()
-    if (response.ok) {
-      console.log(`Neon 資料庫成功更新欄位: ${levelColumn}`)
-    } else {
-      console.error('更新資料庫失敗:', data.message)
-    }
-  } catch (err) {
-    console.error('網路連線錯誤，無法更新資料庫:', err)
-  }
-}
 
 onMounted(() => {
   ctx = gameCanvas.value.getContext('2d')
