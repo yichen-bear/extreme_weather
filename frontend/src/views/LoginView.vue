@@ -78,7 +78,8 @@ const handleRedirect = () => {
 const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
   try {
-    const res = await axios.post(`http://localhost:3000${endpoint}`, formData)
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const res = await axios.post(`${baseURL}${endpoint}`, formData)
     if (isLogin.value) {
       authStore.login(res.data.token, res.data.username, res.data.avatar)
       alert('登入成功！')
@@ -103,7 +104,8 @@ const handleGuestLogin = () => {
 const handleGoogleResponse = async (response) => {
   try {
     // response.credential 是 Google 回傳的 ID Token
-    const res = await axios.post(`http://localhost:3000/api/auth/google`, {
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const res = await axios.post(`${baseURL}/api/auth/google`, {
       idToken: response.credential
     })
     authStore.login(res.data.token, res.data.username, res.data.avatar)

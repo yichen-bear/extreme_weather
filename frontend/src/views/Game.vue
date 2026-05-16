@@ -602,6 +602,16 @@ const update = () => {
         if (LEVEL_DATA[levelNum]) {
           nextLevelInfo.value = LEVEL_DATA[levelNum]
           showLevelPopup.value = true
+
+          if (threshold === 200) {
+            updateLevelInDatabase('levelnew')
+          } else if (threshold === 400) {
+            updateLevelInDatabase('levelflood')
+          } else if (threshold === 600) {
+            updateLevelInDatabase('levelfire')
+          } else if (threshold === 800) {
+            updateLevelInDatabase('levelwind')
+          }
         }
       }
     })
@@ -973,6 +983,40 @@ const loop = () => {
   update()
   draw()
   animationId = requestAnimationFrame(loop)
+}
+
+
+// 新增：將通關紀錄同步到後端 Neon 資料庫
+const updateLevelInDatabase = async (levelColumn) => {
+  // 從 localStorage 拿到登入時存下來的 token
+  const token = localStorage.getItem('token') 
+  
+  if (!token) {
+    console.log('玩家未登入，不記錄關卡成績')
+    return
+  }
+
+  try {
+    const response = await fetch('/api/auth/update-level', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // 帶上 JWT Token 供 auth.js 驗證
+      },
+      body: JSON.stringify({
+        levelColumn: levelColumn // 傳送要打勾的欄位名稱，例如 'levelflood'
+      })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      console.log(`Neon 資料庫成功更新欄位: ${levelColumn}`)
+    } else {
+      console.error('更新資料庫失敗:', data.message)
+    }
+  } catch (err) {
+    console.error('網路連線錯誤，無法更新資料庫:', err)
+  }
 }
 
 onMounted(() => {

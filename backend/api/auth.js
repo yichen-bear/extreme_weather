@@ -95,7 +95,7 @@ router.post("/google", async (req, res) => {
 			// 2. 自動註冊，並包含預設的關卡欄位
 			await db.query(
 				"INSERT INTO users (username, email, password_hash, avatar, levelnew, levelflood, levelfire, levelwind, levelfinal) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-				[name, email, "GOOGLE_AUTH_EXTERNAL", picture, 0, 0, 0, 0, 0],
+				[name, email, "GOOGLE_AUTH_EXTERNAL", picture, false, false, false, false, false],
 			);
 			const { rows: newUsers } = await db.query(
 				"SELECT * FROM users WHERE email = $1",
@@ -130,6 +130,42 @@ router.post("/google", async (req, res) => {
 		console.error("Google Auth Error:", err);
 		res.status(401).json({ message: "Google 驗證失效" });
 	}
+});
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    
+    if (!token) return res.status(401).json({ message: "未授權" });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ message: "Token 失效" });
+        req.userId = user.userId;
+        next();
+    });
+};
+
+// 儲存遊玩情況路徑: /api/user/update-level
+router.post("/update-level", authenticateToken, async (req, res) => {
+    const { levelColumn } = req.body;
+    const userId = req.userId;
+
+    // 白名單防禦線：防止惡意前端傳入奇怪的字串搞 SQL Injection
+    const validColumns = ["levelnew", "levelflood", "levelfire", "levelwind", "levelfinal"];
+    if (!validColumns.includes(levelColumn)) {
+        return res.status(400).json({ message: "無效的關卡欄位" });
+    }
+
+    try {
+        // 動態將對應欄位更新為 true
+        const queryText = `UPDATE users SET ${levelColumn} = true WHERE id = $1`;
+        await db.query(queryText, [userId]);
+
+        res.json({ message: "關卡紀錄更新成功" });
+    } catch (err) {
+        console.error("更新關卡紀錄失敗:", err);
+        res.status(500).json({ message: "伺服器錯誤" });
+    }
 });
 
 module.exports = router;
