@@ -202,7 +202,9 @@ const updateBackendLevel = async (levelNum) => {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/score/update-level', {
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    
+    const response = await fetch(`${baseURL}/api/score/update-level`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

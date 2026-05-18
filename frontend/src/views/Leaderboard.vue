@@ -61,16 +61,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-// 延用資料結構，新增 timestamp (成績完成時間)
-const mockLeaderboard = ref([
-  { name: 'APEX_CLIMBER', score: '98,420', pct: 100, timestamp: '2024-05-20T14:32:05' },
-  { name: 'STORMRIDER_77', score: '84,110', pct: 85, timestamp: '2024-05-19T09:15:22' },
-  { name: 'ECO_PHOENIX', score: '71,880', pct: 73, timestamp: '2024-05-20T11:48:10' },
-  { name: 'AURORA_WALKER', score: '65,200', pct: 66, timestamp: '2024-05-18T22:01:30' },
-  { name: 'VOID_RUNNER', score: '59,800', pct: 60, timestamp: '2024-05-20T08:12:45' },
-])
+const mockLeaderboard = ref([])
 
 // 取得排名後綴的小工具 (1st, 2nd, 3rd, 4th...)
 const getOrdinal = (n) => {
@@ -90,6 +84,18 @@ const formatTimestamp = (timestampString) => {
   const ss = String(date.getSeconds()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd} // ${hh}:${min}:${ss}`;
 }
+
+onMounted(async () => {
+  try {
+    // 讀取環境變數
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const res = await axios.get(`${baseURL}/api/score/leaderboard`)
+    mockLeaderboard.value = res.data
+  } catch (err) {
+    console.error('無法載入排行榜:', err)
+  }
+})
+
 </script>
 
 <style scoped>
