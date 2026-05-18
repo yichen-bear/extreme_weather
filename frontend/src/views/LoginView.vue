@@ -9,21 +9,39 @@
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div v-if="!isLogin" class="input-group">
           <label>USERNAME</label>
-          <input v-model="formData.username" type="text" placeholder="輸入玩家名稱" :disabled="isLoading" required />
+          <input
+            v-model="formData.username"
+            type="text"
+            placeholder="輸入玩家名稱"
+            :disabled="isLoading"
+            required
+          />
         </div>
 
         <div class="input-group">
           <label>EMAIL</label>
-          <input v-model="formData.email" type="email" placeholder="輸入電子郵件" :disabled="isLoading" required />
+          <input
+            v-model="formData.email"
+            type="email"
+            placeholder="輸入電子郵件"
+            :disabled="isLoading"
+            required
+          />
         </div>
 
         <div class="input-group">
           <label>PASSWORD</label>
-          <input v-model="formData.password" type="password" placeholder="輸入密碼" :disabled="isLoading" required />
+          <input
+            v-model="formData.password"
+            type="password"
+            placeholder="輸入密碼"
+            :disabled="isLoading"
+            required
+          />
         </div>
 
         <button type="submit" class="submit-btn" :disabled="isLoading">
-          <span v-if="isLoading">伺服器喚醒中，請稍候 (約60秒)...</span>
+          <span v-if="isLoading">伺服器喚醒中，請稍候...</span>
           <span v-else>{{ isLogin ? '進入系統' : '建立帳號' }}</span>
         </button>
 
@@ -31,7 +49,10 @@
           以訪客身分快速體驗
         </button>
 
-        <div class="google-btn-wrapper" :style="{ pointerEvents: isLoading ? 'none' : 'auto', opacity: isLoading ? 0.5 : 1 }">
+        <div
+          class="google-btn-wrapper"
+          :style="{ pointerEvents: isLoading ? 'none' : 'auto', opacity: isLoading ? 0.5 : 1 }"
+        >
           <img
             class="googlepic"
             src="../assets/google.jpg"
@@ -82,15 +103,15 @@ const handleRedirect = () => {
 
 const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
-  
+
   // 💡 步驟 2：發送請求前，開啟載入狀態
   isLoading.value = true
-  
+
   try {
     // 這裡整合了你先前搬到環境變數的寫法
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
     const res = await axios.post(`${baseURL}${endpoint}`, formData)
-    
+
     if (isLogin.value) {
       authStore.login(res.data.token, res.data.username, res.data.avatar)
       alert('登入成功！')
@@ -121,7 +142,7 @@ const handleGoogleResponse = async (response) => {
   try {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
     const res = await axios.post(`${baseURL}/api/auth/google`, {
-      idToken: response.credential
+      idToken: response.credential,
     })
     authStore.login(res.data.token, res.data.username, res.data.avatar)
     alert('Google 登入成功！')
@@ -138,9 +159,9 @@ const handleGoogleResponse = async (response) => {
 const handleCustomGoogleLogin = () => {
   /* global google */
   if (typeof google !== 'undefined') {
-    google.accounts.id.prompt(); 
+    google.accounts.id.prompt()
   } else {
-    console.error("Google SDK 尚未載入完成");
+    console.error('Google SDK 尚未載入完成')
   }
 }
 
@@ -152,13 +173,13 @@ onMounted(() => {
   script.onload = () => {
     /* global google */
     google.accounts.id.initialize({
-      client_id: "1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com",
+      client_id: '1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com',
       callback: handleGoogleResponse,
-      itp_support: true, 
+      itp_support: true,
       use_fedcm_for_prompt: false,
       auto_select: false,
-      context: 'signin'
-    });
+      context: 'signin',
+    })
   }
   document.head.appendChild(script)
 })
@@ -167,14 +188,14 @@ onMounted(() => {
 <style scoped>
 .auth-overlay {
   padding-top: 100px;
-  height: calc(100vh - 36px); 
+  height: calc(100vh - 36px);
   display: flex;
-  align-items: flex-start; 
+  align-items: flex-start;
   justify-content: center;
   background: transparent;
   color: #fff;
-  overflow-y: auto; 
-  padding: 45px 20px; 
+  overflow-y: auto;
+  padding: 45px 20px;
   box-sizing: border-box;
 
   scrollbar-width: none;
@@ -309,22 +330,24 @@ onMounted(() => {
 
 .google-btn-wrapper {
   width: 100%;
-  display: flex;         
+  display: flex;
   justify-content: center;
-  margin-top: 15px;       
+  margin-top: 15px;
 }
 
 .custom-google-btn {
-  width: 100%;           
-  max-width: 400px;      
+  width: 100%;
+  max-width: 400px;
   height: auto;
   cursor: pointer;
-  transition: transform 0.2s, filter 0.2s;
+  transition:
+    transform 0.2s,
+    filter 0.2s;
 }
 
 .custom-google-btn:hover {
   transform: translateY(-2px);
-  filter: brightness(1.1);    
+  filter: brightness(1.1);
 }
 
 .googlepic {
