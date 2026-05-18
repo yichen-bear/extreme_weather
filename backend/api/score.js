@@ -32,7 +32,7 @@ router.post("/update-level", authenticateToken, async (req, res) => {
 
     try {
         // 使用動態字串安全地更新該關卡狀態為 1 (代表已通關)
-        const queryText = `UPDATE users SET ${levelColumn} = 1 WHERE id = $1`;
+        const queryText = `UPDATE users SET ${levelColumn} = true WHERE id = $1`;
         await db.query(queryText, [userId]);
 
         res.json({ 
