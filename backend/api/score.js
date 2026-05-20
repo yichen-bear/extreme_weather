@@ -1,8 +1,7 @@
-// backend/api/score.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db'); // 確保路徑與你原本的一致
-const verifyToken = require('./middleware/auth'); // 假設你有驗證中間件
+const verifyToken = require('../middleware/auth'); // 假設你有驗證中間件
 
 // 更新通關紀錄或最高高度
 router.post('/update-level', verifyToken, async (req, res) => {
