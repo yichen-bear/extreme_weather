@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db'); // 確保路徑與你原本的一致
 const verifyToken = require('./auth'); // 假設你有驗證中間件
+const { verifyToken } = require('./auth');
 
 // 更新通關紀錄或最高高度
 router.post('/update-level', verifyToken, async (req, res) => {
   const { levelColumn, score, character } = req.body;
-  const userId = req.user.id; // 從 JWT Token 解析出來的用戶 ID
+  const userId = req.user.userId; // 從 JWT Token 解析出來的用戶 ID
 
   // 白名單檢查，防止 SQL 注入
   const allowedColumns = ["levelnew", "levelflood", "levelfire", "levelwind", "levelfinal"];
@@ -23,7 +24,7 @@ router.post('/update-level', verifyToken, async (req, res) => {
 
       // 先查詢目前資料庫裡的最高高度
       const currentRes = await pool.query(
-        `SELECT levelfinal FROM users WHERE user_id = $1`, 
+        `SELECT levelfinal FROM users WHERE id = $1`, 
         [userId]
       );
       
@@ -34,7 +35,7 @@ router.post('/update-level', verifyToken, async (req, res) => {
         await pool.query(
           `UPDATE users 
            SET levelfinal = $1, final_char = $2 
-           WHERE user_id = $3`,
+           WHERE id = $3`,
           [Math.floor(score), character, userId]
         );
         return res.json({ message: '🎉 突破個人最高極限！已更新紀錄。', updated: true });
@@ -46,16 +47,18 @@ router.post('/update-level', verifyToken, async (req, res) => {
     // 狀況 B：一般新手或災難關卡，維持原本的布林值勾選邏輯
     else {
       await pool.query(
-        `UPDATE users SET ${levelColumn} = true WHERE user_id = $1`,
+        `UPDATE users SET ${levelColumn} = true WHERE id = $1`,
         [userId]
       );
       return res.json({ message: `關卡 ${levelColumn} 已解鎖。` });
     }
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Score API 錯誤:", err);
     res.status(500).json({ message: '伺服器內部錯誤' });
   }
 });
+
+
 
 module.exports = router;

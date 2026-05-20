@@ -35,7 +35,7 @@ app.use(
 );
 
 // 引入路由模組
-const authRoute = require("./api/auth");
+const { router: authRoute } = require("./api/auth");
 
 // 掛載路徑
 app.use("/api/auth", authRoute);

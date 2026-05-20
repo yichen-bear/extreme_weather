@@ -163,4 +163,27 @@ router.post("/google", async (req, res) => {
 	}
 });
 
-module.exports = router;
+const verifyToken = (req, res, next) => {
+	// 從 Headers 拿取 Authorization: Bearer <token>
+	const authHeader = req.headers["authorization"];
+	const token = authHeader && authHeader.split(" ")[1];
+
+	if (!token) {
+		return res.status(401).json({ message: "未提供驗證 Token，請先登入" });
+	}
+
+	jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+		if (err) {
+			return res.status(403).json({ message: "Token 驗證失效或已過期" });
+		}
+		// 將解析出來的 payload (包含 userId) 存入 req.user 傳給下一個路由
+		req.user = decoded; 
+		next();
+	});
+};
+
+module.exports = {
+	router,
+	verifyToken
+};
+

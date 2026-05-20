@@ -189,7 +189,6 @@ const LEVEL_COLUMN_MAP = {
   4: 'levelfinal', // ⚡ 最終試煉
 }
 
-// 1. 修改發送函式，新增 score 和 character 兩個參數
 const updateBackendLevel = async (levelNum, currentScore = 0, charName = '') => {
   const columnName = LEVEL_COLUMN_MAP[levelNum]
   if (!columnName) return
@@ -203,12 +202,10 @@ const updateBackendLevel = async (levelNum, currentScore = 0, charName = '') => 
   try {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-    // 打包準備傳送的資料
     const requestBody = {
       levelColumn: columnName,
     }
 
-    // 如果是最終試煉，額外加上高度與角色名稱
     if (columnName === 'levelfinal') {
       requestBody.score = Math.floor(currentScore)
       requestBody.character = charName
@@ -220,15 +217,21 @@ const updateBackendLevel = async (levelNum, currentScore = 0, charName = '') => 
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(requestBody), // 傳送物件
+      body: JSON.stringify(requestBody),
     })
 
-    const data = await response.json()
-    if (response.ok) {
-      console.log(`✅ 資料庫更新成功：${columnName}`, data.message)
-    } else {
-      console.error('資料庫更新失敗:', data.message)
+    // 防禦機制：先檢查回應狀態碼是否成功
+    if (!response.ok) {
+      // 如果是 500 或其他錯誤，先嘗試拿文字，避免直接 .json() 崩潰
+      const errorText = await response.text();
+      console.error(`❌ 後端伺服器回傳錯誤 (狀態碼 ${response.status})`);
+      return;
     }
+
+    // 確定是 ok (狀態碼 200~299) 之後，再解析 JSON
+    const data = await response.json()
+    console.log(`✅ 資料庫更新成功：${columnName}`, data.message)
+
   } catch (err) {
     console.error('連線後端 Score API 發生錯誤:', err)
   }
