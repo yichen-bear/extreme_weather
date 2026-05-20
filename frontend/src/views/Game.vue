@@ -136,7 +136,7 @@ const characters = [
   {
     id: 2,
     name: '毆必',
-    img: 'orbit.png',
+    img: '/orbit.png',
     playW: 50,
     playH: 50,
     lobbyW: 200,
@@ -145,7 +145,7 @@ const characters = [
   {
     id: 3,
     name: '春天',
-    img: 'spring.png',
+    img: '/spring.png',
     playW: 50,
     playH: 75,
     lobbyW: 150,
@@ -154,7 +154,7 @@ const characters = [
   {
     id: 4,
     name: '夏天',
-    img: 'summer.png',
+    img: '/summer.png',
     playW: 50,
     playH: 75,
     lobbyW: 150,
@@ -163,7 +163,7 @@ const characters = [
   {
     id: 5,
     name: '秋天',
-    img: 'fall.png',
+    img: '/fall.png',
     playW: 50,
     playH: 75,
     lobbyW: 150,
@@ -172,7 +172,7 @@ const characters = [
   {
     id: 6,
     name: '冬天',
-    img: 'winter.png',
+    img: '/winter.png',
     playW: 50,
     playH: 75,
     lobbyW: 150,
