@@ -182,49 +182,57 @@ const characters = [
 
 // 1. 數字關卡與資料庫欄位白名單的對應表
 const LEVEL_COLUMN_MAP = {
-  0: "levelnew",     // 🌱 新手訓練
-  1: "levelflood",    // 💧 波濤洪水
-  2: "levelfire",     // 🔥 野火燎原
-  3: "levelwind",     // 🌀 狂風大作
-  4: "levelfinal"     // ⚡ 最終試煉
-};
+  0: 'levelnew', // 🌱 新手訓練
+  1: 'levelflood', // 💧 波濤洪水
+  2: 'levelfire', // 🔥 野火燎原
+  3: 'levelwind', // 🌀 狂風大作
+  4: 'levelfinal', // ⚡ 最終試煉
+}
 
-// 2. 自行定義一個發送請求給後端 score.js 的函式
-const updateBackendLevel = async (levelNum) => {
-  const columnName = LEVEL_COLUMN_MAP[levelNum];
-  if (!columnName) return;
+// 1. 修改發送函式，新增 score 和 character 兩個參數
+const updateBackendLevel = async (levelNum, currentScore = 0, charName = '') => {
+  const columnName = LEVEL_COLUMN_MAP[levelNum]
+  if (!columnName) return
 
-  // 從登入時存入的 localStorage 抓取 Token
-  const token = localStorage.getItem('token'); 
+  const token = localStorage.getItem('token')
   if (!token) {
-    console.log('未登入，通關紀錄將不會同步至資料庫。');
-    return;
+    console.log('未登入，通關紀錄將不會同步至資料庫。')
+    return
   }
 
   try {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    
+
+    // 打包準備傳送的資料
+    const requestBody = {
+      levelColumn: columnName,
+    }
+
+    // 如果是最終試煉，額外加上高度與角色名稱
+    if (columnName === 'levelfinal') {
+      requestBody.score = Math.floor(currentScore)
+      requestBody.character = charName
+    }
+
     const response = await fetch(`${baseURL}/api/score/update-level`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 帶入驗證 Token
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        levelColumn: columnName // 帶入白名單字串
-      })
-    });
+      body: JSON.stringify(requestBody), // 傳送物件
+    })
 
-    const data = await response.json();
+    const data = await response.json()
     if (response.ok) {
-      console.log(`✅ 資料庫更新成功：${columnName} 已設定為通關！`);
+      console.log(`✅ 資料庫更新成功：${columnName}`, data.message)
     } else {
-      console.error('資料庫更新失敗:', data.message);
+      console.error('資料庫更新失敗:', data.message)
     }
   } catch (err) {
-    console.error('連線後端 Score API 發生錯誤:', err);
+    console.error('連線後端 Score API 發生錯誤:', err)
   }
-};
+}
 
 const LEVEL_DATA = {
   1: { title: '💧 波濤洪水', desc: '水位將持續上升，別被淹沒了！' },
@@ -541,6 +549,13 @@ const applyDamage = (amount) => {
   if (playerLives.value <= 0) {
     playerLives.value = 0
     gameOver.value = true
+
+    // 遊戲結束立刻抓取當前角色名稱與分數送去後端比大小
+    const currentCharName = characters[selectedCharIndex.value]?.name || '小球'
+
+    // LEVEL_COLUMN_MAP[4] 對應的就是 "levelfinal"
+    updateBackendLevel(4, score.value, currentCharName)
+
     return
   }
 
@@ -648,7 +663,7 @@ const update = () => {
         if (LEVEL_DATA[levelNum]) {
           nextLevelInfo.value = LEVEL_DATA[levelNum]
           showLevelPopup.value = true
-          updateBackendLevel(index);
+          updateBackendLevel(index)
         }
       }
     })
@@ -1022,7 +1037,6 @@ const loop = () => {
   animationId = requestAnimationFrame(loop)
 }
 
-
 onMounted(() => {
   ctx = gameCanvas.value.getContext('2d')
   window.addEventListener('keydown', (e) => {
@@ -1115,7 +1129,7 @@ canvas {
 .health-area {
   position: absolute;
   left: 16px;
-  top: 15px; 
+  top: 15px;
   font-size: 22px;
   letter-spacing: 2px;
   min-width: 70px;
@@ -1193,7 +1207,7 @@ canvas {
   border-radius: 12px;
   padding: 30px 40px;
   text-align: center;
-  min-width: 280px;  
+  min-width: 280px;
 }
 .go-eyebrow {
   font-family: 'Bebas Neue', sans-serif;
@@ -1218,8 +1232,8 @@ canvas {
   font-size: 20px;
 }
 .restart-btn {
-  display: flex;            
-  justify-content: center;  
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 8px;
   background: #ff6b35;
@@ -1230,8 +1244,8 @@ canvas {
   font-size: 20px;
   cursor: pointer;
   border-radius: 4px;
-  width: 100%;               
-  box-sizing: border-box;    
+  width: 100%;
+  box-sizing: border-box;
 }
 .restart-icon {
   animation: bounce 1.5s infinite;
@@ -1410,19 +1424,19 @@ canvas {
 }
 
 .back-home-btn {
-  display: flex;            
+  display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;              
-  margin-top: 12px;         
+  width: 100%;
+  margin-top: 12px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: rgba(255, 255, 255, 0.7);
-  padding: 12px 28px;       
+  padding: 12px 28px;
   border-radius: 4px;
   cursor: pointer;
-  font-family: 'Bebas Neue', sans-serif; 
-  font-size: 20px;        
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
   transition: all 0.2s;
   box-sizing: border-box;
 }
