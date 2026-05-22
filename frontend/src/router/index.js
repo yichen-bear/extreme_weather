@@ -6,16 +6,14 @@ import LoginView from '../views/LoginView.vue'
 import Leaderboard from '../views/Leaderboard.vue'
 import Game from '../views/Game.vue'
 import Rules from '../views/Rules.vue'
+import MapView from '../views/MapView.vue'
 
 const routes = [
   { path: '/', component: GameHome },
   { path: '/loginview', component: LoginView },
-  { path: '/game', 
-    component: Game,
-    meta: { hideAppComponents: true },
-  },
+  { path: '/game', component: Game, meta: { hideAppComponents: true } },
   { path: '/rules', component: Rules },
-  { path: '/map', component: { template: '<div>地圖畫面開發中...</div>' } },
+  { path: '/map', component: MapView },
   { path: '/leaderboard', component: Leaderboard },
 ]
 
