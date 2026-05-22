@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': {
           // 如果環境變數有設定後端網址就用線上的，沒有就預設用本地的 localhost:3000
-          target: 'http://localhost:3000', 
+          target: env.VITE_API_URL || 'http://localhost:3000', 
           changeOrigin: true,
           secure: false
         }
