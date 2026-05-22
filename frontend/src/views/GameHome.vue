@@ -130,12 +130,7 @@ const startRules = () => {
 };
 
 const handleMapClick = () => {
-  if (!authStore.isLoggedIn) {
-    alert('請先登入以查看地圖進度！');
-    router.push({ path: '/loginview', query: { redirect: 'map' } });
-    return
-  }
-  currentSubView.value = 'map'
+    router.push('/map');
 };
 
 onMounted(() => {
