@@ -2,29 +2,37 @@
   <nav class="navbar">
     <div class="nav-container">
       <router-link to="/" class="nav-logo" @click="closeMenu">Climate Ascent</router-link>
-      
+
       <button class="hamburger" :class="{ 'is-active': isMenuOpen }" @click="toggleMenu">
         <span></span>
         <span></span>
         <span></span>
       </button>
-      
+
       <div class="nav-links" :class="{ 'is-open': isMenuOpen }">
-        <button v-on:click="handleStartGame" class="nav-item" style="margin-bottom: 3px;">遊戲</button>
+        <button v-on:click="handleStartGame" class="nav-item" style="margin-bottom: 3px">
+          遊戲
+        </button>
         <router-link to="/leaderboard" class="nav-item" @click="closeMenu">排行榜</router-link>
 
         <div class="auth-section">
           <template v-if="!authStore.isLoggedIn">
-            <router-link to="/loginview" class="btn-nav primary" @click="closeMenu">登入</router-link>
+            <router-link to="/loginview" class="btn-nav primary" @click="closeMenu"
+              >登入</router-link
+            >
           </template>
-          
+
           <template v-else>
-            <div class="user-info">
-              <span class="user-status">{{ authStore.isGuest ? '訪客' : authStore.username }}</span>
-              <div class="user-avatar">
-                <img :src="authStore.avatar || '/user.png'" class="avatar-img">
+            <router-link to="/profile" class="user-info-link" @click="closeMenu">
+              <div class="user-info">
+                <span class="user-status">{{
+                  authStore.isGuest ? '訪客' : authStore.username
+                }}</span>
+                <div class="user-avatar">
+                  <img :src="authStore.avatar || '/user.png'" class="avatar-img" />
+                </div>
               </div>
-            </div>
+            </router-link>
             <button class="btn-nav logout" @click="handleLogout">登出</button>
           </template>
         </div>
@@ -51,7 +59,7 @@ const closeMenu = () => {
 }
 
 const handleLogout = () => {
-  if(confirm('確定要登出嗎？')) {
+  if (confirm('確定要登出嗎？')) {
     authStore.logout()
     closeMenu() // 登出後關閉選單
     router.push('/')
@@ -62,7 +70,7 @@ const handleStartGame = () => {
   closeMenu() // 點擊遊戲後關閉選單
   if (!authStore.isLoggedIn) {
     alert('請先登入以進入遊戲！')
-    router.push({ path: '/loginview', query: { redirect: 'play' } })    
+    router.push({ path: '/loginview', query: { redirect: 'play' } })
     return
   }
   router.push('/game')
@@ -299,5 +307,14 @@ const handleStartGame = () => {
     flex-direction: column;
     margin-bottom: 10px;
   }
+}
+.user-info-link {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.user-info-link:hover {
+  opacity: 0.8;
 }
 </style>

@@ -40,6 +40,7 @@ const { router: authRoute } = require("./api/auth");
 // 掛載路徑
 app.use("/api/auth", authRoute);
 app.use("/api/score", require("./api/score")); // 引入並掛載分數相關的路由
+app.use("/api/user", require("./api/user"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

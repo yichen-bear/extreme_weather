@@ -70,4 +70,26 @@ router.post('/update-level', verifyToken, async (req, res) => {
   }
 });
 
+router.get('/leaderboard', async (req, res) => {
+  try {
+    // 直接撈取 username, avatar, levelfinal, final_char
+    const result = await pool.query(
+      `SELECT 
+        username, 
+        avatar, 
+        levelfinal, 
+        final_char
+       FROM users 
+       WHERE levelfinal > 0 
+       ORDER BY levelfinal DESC 
+       LIMIT 10`
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ 取得排行榜錯誤:", err);
+    res.status(500).json({ message: '伺服器內部錯誤' });
+  }
+});
+
 module.exports = router;
