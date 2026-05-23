@@ -113,7 +113,7 @@ const handleSubmit = async () => {
     const res = await axios.post(`${baseURL}${endpoint}`, formData)
 
     if (isLogin.value) {
-      authStore.login(res.data.token, res.data.username, res.data.avatar)
+      authStore.login(res.data.token, res.data.user.username, res.data.user.avatar)
       alert('登入成功！')
       handleRedirect()
     } else {
@@ -144,7 +144,7 @@ const handleGoogleResponse = async (response) => {
     const res = await axios.post(`${baseURL}/api/auth/google`, {
       idToken: response.credential,
     })
-    authStore.login(res.data.token, res.data.username, res.data.avatar)
+    authStore.login(res.data.token, res.data.user.username, res.data.user.avatar)
     alert('Google 登入成功！')
     handleRedirect()
   } catch (err) {
