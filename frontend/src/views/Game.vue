@@ -1,92 +1,94 @@
 <template>
   <div class="game-wrapper">
-    <div class="game-container">
-      <!-- Nav Buttons -->
-      <div class="nav-buttons">
+    <div class="game-content-area">
+      <div class="nav-sidebar">
         <RouterLink to="/" class="nav-btn">🏠 首頁</RouterLink>
         <RouterLink to="/rules" class="nav-btn">📋 規則</RouterLink>
         <RouterLink to="/map" class="nav-btn">🗺️ 地圖</RouterLink>
+        <RouterLink to="/leaderboard" class="nav-btn">🏆 排行榜</RouterLink>
       </div>
 
-      <!-- HUD -->
-      <div class="hud">
-        <div class="health-area">
-          <span v-for="i in Math.floor(playerLives)" :key="i" class="heart">❤️</span>
-          <span v-if="playerLives % 1 !== 0" class="heart half">💔</span>
-          <span
-            v-for="i in Math.max(0, 2 - Math.ceil(playerLives))"
-            :key="'lost' + i"
-            class="heart lost"
-            >🖤</span
-          >
-        </div>
+      <div class="game-container">
+        <!-- HUD -->
+        <div class="hud">
+          <div class="health-area">
+            <span v-for="i in Math.floor(playerLives)" :key="i" class="heart">❤️</span>
+            <span v-if="playerLives % 1 !== 0" class="heart half">💔</span>
+            <span
+              v-for="i in Math.max(0, 2 - Math.ceil(playerLives))"
+              :key="'lost' + i"
+              class="heart lost"
+              >🖤</span
+            >
+          </div>
 
-        <div class="altitude-area">
-          <div class="altitude-label">ALTITUDE</div>
-          <div class="altitude-value">{{ Math.floor(score) }}<span class="alt-unit">m</span></div>
-        </div>
+          <div class="altitude-area">
+            <div class="altitude-label">ALTITUDE</div>
+            <div class="altitude-value">{{ Math.floor(score) }}<span class="alt-unit">m</span></div>
+          </div>
 
-        <div v-if="gameStarted" class="level-area">
-          {{ currentLevelName }}
-        </div>
-      </div>
-
-      <!-- Water Overlay -->
-      <div
-        v-if="activeWaterRise"
-        class="water-overlay"
-        :style="{ height: waterHeight + 'px' }"
-      ></div>
-
-      <!-- Game Over Overlay -->
-      <Transition name="gameover">
-        <div v-if="gameOver" class="game-over-overlay">
-          <div class="game-over-panel">
-            <div class="go-eyebrow">MISSION FAILED</div>
-            <h2 class="go-title">登峰失敗</h2>
-            <p class="go-score">
-              最終高度 <span class="go-number">{{ Math.floor(score) }}</span> 公尺
-            </p>
-            <div class="go-divider"></div>
-            <button @click="resetGame" class="restart-btn">
-              <span class="restart-icon">▲</span>
-              重新攀登
-            </button>
-            <button @click="backToHome" class="back-home-btn">返回大廳</button>
+          <div v-if="gameStarted" class="level-area">
+            {{ currentLevelName }}
           </div>
         </div>
-      </Transition>
 
-      <Transition name="fade">
-        <div v-if="showLevelPopup" class="level-popup-overlay">
-          <div class="level-popup-panel">
-            <div class="lp-eyebrow">NEW CHALLENGE</div>
-            <h2 class="lp-title">{{ nextLevelInfo.title }}</h2>
-            <p class="lp-desc">{{ nextLevelInfo.desc }}</p>
-            <div class="lp-hint">點擊 Enter 繼續挑戰</div>
-          </div>
-        </div>
-      </Transition>
+        <!-- Water Overlay -->
+        <div
+          v-if="activeWaterRise"
+          class="water-overlay"
+          :style="{ height: waterHeight + 'px' }"
+        ></div>
 
-      <Transition name="fade">
-        <div v-if="!gameStarted" class="home-menu-layer">
-          <!-- 角色切換控制 -->
-          <div class="character-selector">
-            <button @click="prevChar" class="arrow-btn left">◀</button>
-            <div class="char-info-display">
-              <div class="char-name-tag">{{ characters[selectedCharIndex].name }}</div>
+        <!-- Game Over Overlay -->
+        <Transition name="gameover">
+          <div v-if="gameOver" class="game-over-overlay">
+            <div class="game-over-panel">
+              <div class="go-eyebrow">MISSION FAILED</div>
+              <h2 class="go-title">登峰失敗</h2>
+              <p class="go-score">
+                最終高度 <span class="go-number">{{ Math.floor(score) }}</span> 公尺
+              </p>
+              <div class="go-divider"></div>
+              <button @click="resetGame" class="restart-btn">
+                <span class="restart-icon">▲</span>
+                重新攀登
+              </button>
+              <button @click="backToHome" class="back-home-btn">返回大廳</button>
             </div>
-            <button @click="nextChar" class="arrow-btn right">▶</button>
           </div>
+        </Transition>
 
-          <!-- 開始按鈕 -->
-          <button @click="startGame" class="big-play-btn">
-            <span class="play-icon">START</span>
-          </button>
-        </div>
-      </Transition>
+        <Transition name="fade">
+          <div v-if="showLevelPopup" class="level-popup-overlay">
+            <div class="level-popup-panel">
+              <div class="lp-eyebrow">NEW CHALLENGE</div>
+              <h2 class="lp-title">{{ nextLevelInfo.title }}</h2>
+              <p class="lp-desc">{{ nextLevelInfo.desc }}</p>
+              <div class="lp-hint">點擊 Enter 繼續挑戰</div>
+            </div>
+          </div>
+        </Transition>
 
-      <canvas ref="gameCanvas" :width="CANVAS_WIDTH" :height="CANVAS_HEIGHT"></canvas>
+        <Transition name="fade">
+          <div v-if="!gameStarted" class="home-menu-layer">
+            <!-- 角色切換控制 -->
+            <div class="character-selector">
+              <button @click="prevChar" class="arrow-btn left">◀</button>
+              <div class="char-info-display">
+                <div class="char-name-tag">{{ characters[selectedCharIndex].name }}</div>
+              </div>
+              <button @click="nextChar" class="arrow-btn right">▶</button>
+            </div>
+
+            <!-- 開始按鈕 -->
+            <button @click="startGame" class="big-play-btn">
+              <span class="play-icon">START</span>
+            </button>
+          </div>
+        </Transition>
+
+        <canvas ref="gameCanvas" :width="CANVAS_WIDTH" :height="CANVAS_HEIGHT"></canvas>
+      </div>
     </div>
   </div>
 </template>
@@ -223,15 +225,14 @@ const updateBackendLevel = async (levelNum, currentScore = 0, charImg = '') => {
     // 防禦機制：先檢查回應狀態碼是否成功
     if (!response.ok) {
       // 如果是 500 或其他錯誤，先嘗試拿文字，避免直接 .json() 崩潰
-      const errorText = await response.text();
-      console.error(`❌ 後端伺服器回傳錯誤 (狀態碼 ${response.status})`);
-      return;
+      const errorText = await response.text()
+      console.error(`❌ 後端伺服器回傳錯誤 (狀態碼 ${response.status})`)
+      return
     }
 
     // 確定是 ok (狀態碼 200~299) 之後，再解析 JSON
     const data = await response.json()
     console.log(`✅ 資料庫更新成功：${columnName}`, data.message)
-
   } catch (err) {
     console.error('連線後端 Score API 發生錯誤:', err)
   }
@@ -554,7 +555,7 @@ const applyDamage = (amount) => {
     gameOver.value = true
 
     const currentCharImg = characters[selectedCharIndex.value]?.img || 'BALL'
-    
+
     // LEVEL_COLUMN_MAP[4] 對應的就是 "levelfinal"
     updateBackendLevel(4, score.value, currentCharImg)
 
@@ -1067,6 +1068,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
 }
+.game-content-area {
+  position: relative;
+}
 .game-container {
   position: relative;
   width: 520px;
@@ -1087,18 +1091,32 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 8px;
 }
+.nav-sidebar {
+  position: absolute;
+  /* 往左推移，拉開與畫布的距離 (130px 足以放下按鈕) */
+  left: -130px; 
+  top: 70px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .nav-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  /* 改用半透明深背景,增加對比度 */
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  /* 鎖定寬度讓側邊欄看起來比較整齊 */
+  width: 110px;
+  box-sizing: border-box;
+  
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(0, 229, 255, 0.3);
   border-radius: 8px;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.3s ease;
