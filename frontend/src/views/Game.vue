@@ -189,7 +189,7 @@ const LEVEL_COLUMN_MAP = {
   4: 'levelfinal', // ⚡ 最終試煉
 }
 
-const updateBackendLevel = async (levelNum, currentScore = 0, charName = '') => {
+const updateBackendLevel = async (levelNum, currentScore = 0, charImg = '') => {
   const columnName = LEVEL_COLUMN_MAP[levelNum]
   if (!columnName) return
 
