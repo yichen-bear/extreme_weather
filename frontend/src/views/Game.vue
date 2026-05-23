@@ -208,7 +208,7 @@ const updateBackendLevel = async (levelNum, currentScore = 0, charName = '') => 
 
     if (columnName === 'levelfinal') {
       requestBody.score = Math.floor(currentScore)
-      requestBody.character = charName
+      requestBody.character = charImg
     }
 
     const response = await fetch(`${baseURL}/api/score/update-level`, {
@@ -553,11 +553,10 @@ const applyDamage = (amount) => {
     playerLives.value = 0
     gameOver.value = true
 
-    // 遊戲結束立刻抓取當前角色名稱與分數送去後端比大小
-    const currentCharName = characters[selectedCharIndex.value]?.name || '小球'
-
+    const currentCharImg = characters[selectedCharIndex.value]?.img || 'BALL'
+    
     // LEVEL_COLUMN_MAP[4] 對應的就是 "levelfinal"
-    updateBackendLevel(4, score.value, currentCharName)
+    updateBackendLevel(4, score.value, currentCharImg)
 
     return
   }

@@ -18,9 +18,9 @@
       </header>
 
       <div class="lb-list">
-        <div 
-          v-for="(entry, i) in mockLeaderboard" 
-          :key="i" 
+        <div
+          v-for="(entry, i) in mockLeaderboard"
+          :key="i"
           class="lb-item"
           :class="'rank-card-' + (i + 1)"
           :style="{ '--delay': i }"
@@ -36,7 +36,18 @@
 
           <div class="lb-player-info">
             <div class="lb-player-avatar-placeholder">
-              {{ entry.name.substring(0, 2).toUpperCase() }}
+              <img
+                v-if="entry.final_char && entry.final_char.includes('.png')"
+                :src="entry.final_char"
+                alt="avatar"
+                class="lb-avatar-img"
+              />
+
+              <div v-else-if="entry.final_char === 'BALL'" class="lb-avatar-ball"></div>
+
+              <span v-else>
+                {{ entry.name.substring(0, 2).toUpperCase() }}
+              </span>
             </div>
             <div class="lb-player-details">
               <span class="lb-name">{{ entry.name }}</span>
@@ -52,11 +63,9 @@
               <span class="lb-pts">PTS</span>
             </div>
           </div>
-          
         </div>
       </div>
-      
-      </div>
+    </div>
   </div>
 </template>
 
@@ -68,21 +77,21 @@ const mockLeaderboard = ref([])
 
 // 取得排名後綴的小工具 (1st, 2nd, 3rd, 4th...)
 const getOrdinal = (n) => {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return s[(v - 20) % 10] || s[v] || s[0]
 }
 
 // 格式化時間戳記為系統日誌風格 (YYYY-MM-DD // HH:MM:SS)
 const formatTimestamp = (timestampString) => {
-  const date = new Date(timestampString);
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd} // ${hh}:${min}:${ss}`;
+  const date = new Date(timestampString)
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  const ss = String(date.getSeconds()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd} // ${hh}:${min}:${ss}`
 }
 
 onMounted(async () => {
@@ -95,7 +104,6 @@ onMounted(async () => {
     console.error('無法載入排行榜:', err)
   }
 })
-
 </script>
 
 <style scoped>
@@ -104,7 +112,7 @@ onMounted(async () => {
   --c-bg: #060c14; /* 延用 App.vue 的 --c-bg */
   --c-surface: rgba(15, 31, 46, 0.6);
   --c-accent: #00e5ff; /* 霓虹藍 */
-  --c-warn: #ff6b35;   /* 霓虹橘 */
+  --c-warn: #ff6b35; /* 霓虹橘 */
   --c-gold: #ffd700;
   --c-silver: #c0c0c0;
   --c-bronze: #cd7f32;
@@ -119,7 +127,7 @@ onMounted(async () => {
   background-color: transparent;
   color: var(--c-text);
   font-family: var(--font-body);
-  overflow-y: auto; 
+  overflow-y: auto;
   overflow-x: hidden;
   margin-bottom: 100px;
 
@@ -188,7 +196,8 @@ onMounted(async () => {
 /* Glitch效果 */
 .title-glitch {
   position: absolute;
-  top: 0; left: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   color: var(--c-accent);
   background: var(--c-bg);
@@ -215,10 +224,16 @@ onMounted(async () => {
 .separator-line {
   height: 1px;
   width: 100px;
-  background: linear-gradient(90deg, transparent, var(--c-border, rgba(255,255,255,0.1)), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c-border, rgba(255, 255, 255, 0.1)),
+    transparent
+  );
 }
 .separator-dot {
-  width: 6px; height: 6px;
+  width: 6px;
+  height: 6px;
   background: var(--c-accent);
   transform: rotate(45deg);
   box-shadow: 0 0 10px var(--c-accent);
@@ -243,7 +258,7 @@ onMounted(async () => {
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   backdrop-filter: blur(5px);
-  
+
   /* 入場動畫 */
   opacity: 0;
   transform: translateY(20px);
@@ -260,9 +275,15 @@ onMounted(async () => {
 }
 
 /* 前三名特殊卡片邊框 */
-.rank-card-1 { border-left: 3px solid var(--c-gold); }
-.rank-card-2 { border-left: 3px solid var(--c-silver); }
-.rank-card-3 { border-left: 3px solid var(--c-bronze); }
+.rank-card-1 {
+  border-left: 3px solid var(--c-gold);
+}
+.rank-card-2 {
+  border-left: 3px solid var(--c-silver);
+}
+.rank-card-3 {
+  border-left: 3px solid var(--c-bronze);
+}
 
 /* 背景掃描線動畫 */
 .item-scan-line {
@@ -291,9 +312,16 @@ onMounted(async () => {
   margin-left: 2px;
 }
 /* 前三名顏色 */
-.text-rank-1 { color: var(--c-gold); text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
-.text-rank-2 { color: var(--c-silver); }
-.text-rank-3 { color: var(--c-bronze); }
+.text-rank-1 {
+  color: var(--c-gold);
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+.text-rank-2 {
+  color: var(--c-silver);
+}
+.text-rank-3 {
+  color: var(--c-bronze);
+}
 
 /* 2. 玩家資訊與完成時間區域 */
 .lb-player-info {
@@ -302,13 +330,17 @@ onMounted(async () => {
   gap: 15px;
 }
 .lb-player-avatar-placeholder {
-  width: 45px; height: 45px;
+  width: 45px;
+  height: 45px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-disp);
-  font-size: 18px; color: var(--c-muted);
+  font-size: 18px;
+  color: var(--c-muted);
   transition: all 0.3s ease;
 }
 .lb-item:hover .lb-player-avatar-placeholder {
@@ -318,7 +350,8 @@ onMounted(async () => {
 }
 
 .lb-player-details {
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 .lb-name {
   font-size: 16px;
@@ -356,19 +389,26 @@ onMounted(async () => {
   width: 100%;
 }
 .lb-bar-bg {
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 2px;
 }
 .lb-bar-fill {
-  position: absolute; left: 0; top: 0; bottom: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
   background: linear-gradient(90deg, var(--c-warn), var(--c-accent));
   border-radius: 2px;
   position: relative;
 }
 .bar-glow {
-  position: absolute; right: 0; top: 50%;
-  width: 10px; height: 10px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 10px;
+  height: 10px;
   background: var(--c-accent);
   border-radius: 50%;
   transform: translate(50%, -50%);
@@ -379,7 +419,9 @@ onMounted(async () => {
 .lb-score-wrap {
   text-align: right;
   font-family: var(--font-disp);
-  display: flex; align-items: baseline; justify-content: flex-end;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
 }
 .lb-score {
   font-size: 26px;
@@ -392,47 +434,91 @@ onMounted(async () => {
   margin-left: 4px;
 }
 
-/* Page Footer已被移除，相關CSS也已移除 */
+.lb-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* 用 CSS 畫出的小球頭像 */
+.lb-avatar-ball {
+  width: 24px; /* 配合 45px 的 placeholder 外框，24px 大小最適中 */
+  height: 24px;
+  background-color: #ff8a65; /* 完全同步遊戲中 Canvas 的小球顏色 */
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255, 138, 101, 0.5); /* 幫小球加點淡淡的發光 */
+}
 
 /* ===== KEYFRAMES & ANIMATIONS ===== */
 @keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes scanLoop {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
 }
 
 /* Glitch Animation */
 @keyframes noise-anim {
-  0% { clip: rect(10px, 9999px, 50px, 0); }
-  5% { clip: rect(30px, 9999px, 20px, 0); }
-  20% { clip: rect(0, 9999px, 0, 0); } 
-  100% { clip: rect(0, 9999px, 0, 0); }
+  0% {
+    clip: rect(10px, 9999px, 50px, 0);
+  }
+  5% {
+    clip: rect(30px, 9999px, 20px, 0);
+  }
+  20% {
+    clip: rect(0, 9999px, 0, 0);
+  }
+  100% {
+    clip: rect(0, 9999px, 0, 0);
+  }
 }
 
 /* ===== 響應式 RWD ===== */
 @media (max-width: 768px) {
-  .leaderboard-container { padding-top: 90px; }
+  .leaderboard-container {
+    padding-top: 90px;
+  }
   .lb-item {
     grid-template-columns: 50px 1fr;
     gap: 10px;
     padding: 15px 20px;
   }
-  .lb-rank-num { font-size: 28px; }
+  .lb-rank-num {
+    font-size: 28px;
+  }
   .lb-score-section {
     grid-column: 1 / -1;
     padding: 10px 0 0;
     margin-top: 10px;
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     flex-direction: row;
-    justify-content: space-between; align-items: center;
+    justify-content: space-between;
+    align-items: center;
   }
-  .lb-bar-container { width: 55%; }
-  .lb-score { font-size: 22px; }
+  .lb-bar-container {
+    width: 55%;
+  }
+  .lb-score {
+    font-size: 22px;
+  }
 }
 </style>
