@@ -208,14 +208,15 @@ onMounted(() => {
 
 .auth-card {
   margin: 0 auto;
-  width: 100%;
-  max-width: 600px;
+  width: 80vw; 
+  max-width: 650px;
   padding: 40px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(0, 229, 255, 0.2);
   border-radius: 12px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
+  box-sizing: border-box; /* 確保 padding 不會撐破 80% 寬度 */
 }
 
 .auth-title {
@@ -223,8 +224,7 @@ onMounted(() => {
   font-size: 2.5rem;
   letter-spacing: 4px;
   text-align: center;
-  margin-left: 0;
-  padding: 0 150px;
+  margin: 10px auto 10px;
   color: #00e5ff;
   text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
 }
@@ -354,5 +354,39 @@ onMounted(() => {
   width: 55px;
   border-radius: 50px;
   cursor: pointer;
+}
+
+/* ================================
+   響應式設計 (RWD) 斷點 435px
+================================ */
+@media screen and (max-width: 435px) {
+  .auth-overlay {
+    padding: 20px 15px; 
+    padding-top: 80px; 
+  }
+
+  .auth-card {
+    width: 90%;          /* 手機平板版佔 90%，舒適且符合至少 80% 的標準 */
+    max-width: 100%;     /* 解除上限限制 */
+    padding: 30px 20px; 
+  }
+
+  /* 標題置中維持不變 */
+  .auth-title {
+    font-size: 2rem; 
+    padding: 0 !important; 
+    margin: 0 auto;        
+    width: 100%;           
+    text-align: center;    
+    letter-spacing: 2px;
+  }
+
+  .input-group input {
+    padding: 10px; 
+  }
+
+  .submit-btn {
+    padding: 14px;
+  }
 }
 </style>
