@@ -85,7 +85,7 @@
               <div class="damage-table">
                 <div class="damage-row">
                   <span class="event">碰到洪水</span>
-                  <span class="cost">-0.5 ❤</span>
+                  <span class="cost">-1.5 ❤</span>
                 </div>
                 <div class="damage-row">
                   <span class="event">碰到著火台階</span>
