@@ -130,7 +130,12 @@ const startRules = () => {
 };
 
 const handleMapClick = () => {
-    router.push('/map');
+  if (!authStore.isLoggedIn) {
+    alert('請先登入以查看世界地圖！');
+    router.push({ path: '/loginview', query: { redirect: 'map' } });    
+    return
+  }
+  router.push('/map');
 };
 
 onMounted(() => {
