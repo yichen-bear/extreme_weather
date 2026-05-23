@@ -181,17 +181,30 @@ const handleUpdatePassword = async () => {
 </script>
 
 <style scoped>
+/* 容器設定：限制高度、允許滾動並隱藏滾動條 */
 .page-container {
-  padding: 100px 40px 40px; /* 增加上方 padding 避開 Navbar */
-  max-width: 1000px;
-  margin: 0 auto;
+  height: calc(100vh - 36px); /* 配合畫面高度限制，確保可以觸發內部滾動 */
+  padding: 100px 20px 40px; 
+  box-sizing: border-box;
+  overflow-y: auto; /* 資料過多時允許滾動 */
   z-index: 5;
   position: relative;
-  min-height: 100vh;
+  
+  /* 隱藏滾動條 (跨瀏覽器支持) */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
+.page-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* 標題區塊：寬度對齊下方卡片 */
 .page-header {
-  margin-bottom: 30px;
+  margin: 0 auto 30px;
+  width: 80vw;
+  max-width: 650px;
+  box-sizing: border-box;
 }
 
 .sdg-badge {
@@ -225,7 +238,7 @@ const handleUpdatePassword = async () => {
   color: var(--c-accent, #00e5ff);
 }
 
-/* 卡片主體設計 */
+/* 卡片主體設計 (參照 LoginView 寬度設定) */
 .profile-card {
   background: rgba(15, 31, 46, 0.6);
   border: 1px solid rgba(0, 229, 255, 0.2);
@@ -233,8 +246,12 @@ const handleUpdatePassword = async () => {
   padding: 40px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
-  max-width: 600px;
+  
+  /* 與 LoginView 相同的寬度設定 */
   margin: 0 auto;
+  width: 80vw; 
+  max-width: 650px;
+  box-sizing: border-box;
 }
 
 .guest-warning {
@@ -375,13 +392,33 @@ const handleUpdatePassword = async () => {
   margin: 35px 0;
 }
 
-/* RWD */
-@media screen and (max-width: 768px) {
+/* ================================
+   響應式設計 (RWD) - 參照 LoginView 斷點 435px
+================================ */
+@media screen and (max-width: 435px) {
   .page-container {
-    padding: 80px 20px 20px;
+    padding: 80px 15px 20px;
   }
+  
+  .profile-card, .page-header {
+    width: 90%;          /* 手機平板版佔 90% */
+    max-width: 100%;     /* 解除上限限制 */
+  }
+
   .profile-card {
-    padding: 25px 20px;
+    padding: 30px 20px; 
+  }
+
+  .page-title {
+    font-size: 2rem; 
+  }
+
+  .input-group input {
+    padding: 10px; 
+  }
+
+  .submit-btn {
+    padding: 14px;
   }
 }
 </style>
