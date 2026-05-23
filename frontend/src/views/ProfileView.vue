@@ -24,12 +24,13 @@
         </div>
 
         <div class="input-group">
-          <label>頭像連結 (AVATAR URL)</label>
+          <label>上傳新頭像 (AVATAR UPLOAD)</label>
           <input
-            v-model="profileForm.avatar"
-            type="text"
-            placeholder="請輸入圖片網址 (URL)..."
+            type="file"
+            accept="image/*"
+            @change="handleFileChange"
             :disabled="isLoading"
+            class="file-input"
           />
         </div>
 
@@ -98,6 +99,7 @@ import axios from 'axios'
 import { authStore } from '../stores/user'
 
 const isLoading = ref(false)
+const selectedFile = ref(null)
 
 // 基本資料表單狀態
 const profileForm = reactive({
@@ -120,25 +122,48 @@ onMounted(() => {
   }
 })
 
-// 處理更新基本資料
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    // 產生一個本地端的暫時網址，讓大頭貼可以馬上預覽變化
+    profileForm.avatar = URL.createObjectURL(file) 
+  }
+}
+
 const handleUpdateProfile = async () => {
   if (!profileForm.username) return alert('玩家名稱不能為空！')
   
   isLoading.value = true
   try {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    // 假設你的後端 API 是 /api/user/profile
-    const res = await axios.put(`${baseURL}/api/user/profile`, {
-      username: profileForm.username,
-      avatar: profileForm.avatar
-    }, {
-      headers: { Authorization: `Bearer ${authStore.token}` } // 記得帶上 token
+    
+    // 💡 檔案上傳必須使用 FormData 格式，不能直接傳 JSON
+    const formData = new FormData()
+    formData.append('username', profileForm.username)
+    
+    if (selectedFile.value) {
+      // 有選檔案，把實體檔案傳過去
+      formData.append('avatarFile', selectedFile.value) 
+    } else {
+      // 沒選檔案，把原本的圖片網址傳過去
+      formData.append('avatar', profileForm.avatar)
+    }
+
+    const res = await axios.put(`${baseURL}/api/user/profile`, formData, {
+      headers: { 
+        Authorization: `Bearer ${authStore.token}`,
+      } 
     })
 
-    // 更新前端狀態
+    // 更新前端狀態 (使用後端處理完回傳的永久網址)
     authStore.username = profileForm.username
-    authStore.avatar = profileForm.avatar
+    if (res.data.avatar) {
+      authStore.avatar = res.data.avatar
+      profileForm.avatar = res.data.avatar
+    }
     alert('基本資料更新成功！')
+    selectedFile.value = null // 清空已選檔案
   } catch (err) {
     console.error(err)
     alert(err.response?.data?.message || '更新失敗')
@@ -390,6 +415,27 @@ const handleUpdatePassword = async () => {
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   margin: 35px 0;
+}
+
+.file-input {
+  padding: 8px !important;
+  cursor: pointer;
+}
+
+.file-input::file-selector-button {
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--c-accent, #00e5ff);
+  border: 1px solid var(--c-accent, #00e5ff);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-right: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.file-input::file-selector-button:hover {
+  background: var(--c-accent, #00e5ff);
+  color: #000;
 }
 
 /* ================================

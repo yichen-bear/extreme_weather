@@ -1,10 +1,12 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const db = require("./db");
 
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // 1. 先宣告允許的白名單（注意：結尾不要加斜線 /）
 const allowedOrigins = [
