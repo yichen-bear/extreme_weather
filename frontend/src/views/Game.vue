@@ -617,12 +617,24 @@ const update = () => {
   const level = getCurrentLevel()
   let currentGravity = GRAVITY
   let currentJumpForce = JUMP_FORCE
-  if (level === 3) {
-    currentGravity = 0.32
-    currentJumpForce = -9.2
-  } else if (level === 2) {
-    currentGravity = 0.28
-    currentJumpForce = -8.8
+  switch (level) {
+    case 0: // 🌱 新手訓練
+    case 1: // 💧 波濤洪水
+      currentGravity = 0.25
+      currentJumpForce = -8.5
+      break
+    case 2: // 🔥 野火燎原
+      currentGravity = 0.28   // 數字越大，掉落越快
+      currentJumpForce = -8.8 // 負得越多，跳得越高、越猛
+      break
+    case 3: // 🌀 狂風大作
+      currentGravity = 0.32
+      currentJumpForce = -9.2
+      break
+    case 4: // ⚡ 最終試煉 (原本會回到預設值，現在你可以單獨設定它)
+      currentGravity = 0.35   // 讓最終關卡手感最沉重
+      currentJumpForce = -9.5 // 給予相應的最強彈跳力
+      break
   }
 
   frameCount++

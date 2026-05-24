@@ -10,6 +10,9 @@
       </button>
 
       <div class="nav-links" :class="{ 'is-open': isMenuOpen }">
+        <button v-on:click="handleStartMap" class="nav-item" style="margin-bottom: 3px">
+          地圖
+        </button>
         <button v-on:click="handleStartGame" class="nav-item" style="margin-bottom: 3px">
           遊戲
         </button>
@@ -74,6 +77,16 @@ const handleStartGame = () => {
     return
   }
   router.push('/game')
+}
+
+const handleStartMap = () => {
+  closeMenu() // 點擊遊戲後關閉選單
+  if (!authStore.isLoggedIn) {
+    alert('請先登入以進入遊戲！')
+    router.push({ path: '/loginview', query: { redirect: 'map' } })
+    return
+  }
+  router.push('/map')
 }
 </script>
 
