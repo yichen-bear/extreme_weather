@@ -2,10 +2,18 @@
   <div class="game-wrapper">
     <div class="game-content-area">
       <div class="nav-sidebar">
-        <RouterLink to="/" class="nav-btn">🏠 首頁</RouterLink>
-        <RouterLink to="/rules" class="nav-btn">📋 規則</RouterLink>
-        <RouterLink to="/map" class="nav-btn">🗺️ 地圖</RouterLink>
-        <RouterLink to="/leaderboard" class="nav-btn">🏆 排行榜</RouterLink>
+        <RouterLink to="/" class="nav-btn">
+          <span class="nav-icon">🏠</span><span class="nav-text">首頁</span>
+        </RouterLink>
+        <RouterLink to="/rules" class="nav-btn">
+          <span class="nav-icon">📋</span><span class="nav-text">規則</span>
+        </RouterLink>
+        <RouterLink to="/map" class="nav-btn">
+          <span class="nav-icon">🗺️</span><span class="nav-text">地圖</span>
+        </RouterLink>
+        <RouterLink to="/leaderboard" class="nav-btn">
+          <span class="nav-icon">🏆</span><span class="nav-text">排行榜</span>
+        </RouterLink>
       </div>
 
       <div class="game-container">
@@ -455,7 +463,7 @@ const updateLevelEffects = () => {
     case 4:
       currentLevelName.value = '⚡ 最終試煉'
       activeWaterRise.value = true
-      currentWaterRiseSpeed = 1.5
+      currentWaterRiseSpeed = 1.3
       break
   }
 }
@@ -1094,7 +1102,7 @@ onUnmounted(() => {
 .nav-sidebar {
   position: absolute;
   /* 往左推移，拉開與畫布的距離 (130px 足以放下按鈕) */
-  left: -130px; 
+  left: -130px;
   top: 70px;
   z-index: 40;
   display: flex;
@@ -1110,7 +1118,7 @@ onUnmounted(() => {
   /* 鎖定寬度讓側邊欄看起來比較整齊 */
   width: 110px;
   box-sizing: border-box;
-  
+
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(0, 229, 255, 0.3);
@@ -1528,6 +1536,30 @@ canvas {
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+/* 新增小於 435px 的響應式設計 */
+@media (max-width: 790px) {
+  .nav-sidebar {
+    /* 縮短與畫布的距離，避免小螢幕時超出手機邊界 */
+    left: -55px; 
+    top: 70px;
+    gap: 10px;
+  }
+
+  .nav-btn {
+    /* 將寬度縮小為正方形，剛好容納 Icon */
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    font-size: 18px; /* 稍微放大圖標讓手指好點擊 */
+    border-radius: 50%; /* 也可以選擇維持 8px，圓形(50%)在純 Icon 時視覺效果較佳 */
+  }
+
+  /* 隱藏中文字 */
+  .nav-text {
+    display: none;
   }
 }
 </style>
