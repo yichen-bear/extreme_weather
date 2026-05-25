@@ -32,7 +32,7 @@
                   authStore.isGuest ? '訪客' : authStore.username
                 }}</span>
                 <div class="user-avatar">
-                  <img :src="authStore.avatar || '/user.png'" class="avatar-img" />
+                  <img :src="enforceHttps(authStore.avatar) || '/user.png'" class="avatar-img" />
                 </div>
               </div>
             </router-link>
@@ -87,6 +87,14 @@ const handleStartMap = () => {
     return
   }
   router.push('/map')
+}
+
+const enforceHttps = (url) => {
+  if (!url) return ''
+  if (typeof url === 'string' && url.startsWith('http://')) {
+    return url.replace('http://', 'https://')
+  }
+  return url
 }
 </script>
 

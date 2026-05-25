@@ -13,24 +13,26 @@
     </div>
 
     <div v-else class="profile-card">
-      
       <section class="form-section">
         <h3 class="section-title">基本資料</h3>
-        
+
         <div class="avatar-preview-container">
           <div class="user-avatar-large">
-            <img :src="profileForm.avatar || '/user.png'" alt="Avatar" class="avatar-img">
+            <img
+              :src="avatarInput || profileForm.avatar || '/user.png'"
+              alt="Avatar"
+              class="avatar-img"
+            />
           </div>
         </div>
 
         <div class="input-group">
-          <label>上傳新頭像 (AVATAR UPLOAD)</label>
+          <label>頭像圖片網址 (AVATAR URL)</label>
           <input
-            type="file"
-            accept="image/*"
-            @change="handleFileChange"
+            v-model="avatarInput"
+            type="text"
+            placeholder="請輸入 https:// 開頭的圖片網址"
             :disabled="isLoading"
-            class="file-input"
           />
         </div>
 
@@ -53,7 +55,7 @@
 
       <section class="form-section">
         <h3 class="section-title">安全設定</h3>
-        
+
         <div class="input-group">
           <label>舊密碼 (OLD PASSWORD)</label>
           <input
@@ -88,7 +90,6 @@
           <span>更新密碼</span>
         </button>
       </section>
-
     </div>
   </div>
 </template>
@@ -98,20 +99,21 @@ import { ref, reactive, onMounted } from 'vue'
 import axios from 'axios'
 import { authStore } from '../stores/user'
 
+const avatarInput = ref('')
 const isLoading = ref(false)
 const selectedFile = ref(null)
 
 // 基本資料表單狀態
 const profileForm = reactive({
   username: '',
-  avatar: ''
+  avatar: '',
 })
 
 // 密碼表單狀態
 const passwordForm = reactive({
   oldPassword: '',
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 // 初始化載入當前使用者的資料
@@ -119,48 +121,51 @@ onMounted(() => {
   if (!authStore.isGuest) {
     profileForm.username = authStore.username
     profileForm.avatar = authStore.avatar
+    avatarInput.value = authStore.avatar
   }
 })
 
-const handleFileChange = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    selectedFile.value = file
-    // 產生一個本地端的暫時網址，讓大頭貼可以馬上預覽變化
-    profileForm.avatar = URL.createObjectURL(file) 
-  }
-}
-
 const handleUpdateProfile = async () => {
   if (!profileForm.username) return alert('玩家名稱不能為空！')
-  
+  if (avatarInput.value && !avatarInput.value.startsWith('http')) {
+    return alert('請輸入有效的圖片網址 (須以 http:// 或 https:// 開頭)');
+  }
+
   isLoading.value = true
   try {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    
+
     // 💡 檔案上傳必須使用 FormData 格式，不能直接傳 JSON
     const formData = new FormData()
     formData.append('username', profileForm.username)
-    
+
     if (selectedFile.value) {
       // 有選檔案，把實體檔案傳過去
-      formData.append('avatarFile', selectedFile.value) 
+      formData.append('avatarFile', selectedFile.value)
     } else {
       // 沒選檔案，把原本的圖片網址傳過去
       formData.append('avatar', profileForm.avatar)
     }
 
-    const res = await axios.put(`${baseURL}/api/user/profile`, formData, {
-      headers: { 
+    const payload = {
+      username: profileForm.username,
+      avatar: avatarInput.value
+    }
+
+    const res = await axios.put(`${baseURL}/api/user/profile`, payload, {
+      headers: {
         Authorization: `Bearer ${authStore.token}`,
-      } 
+        'Content-Type': 'application/json'
+      },
     })
 
     // 更新前端狀態 (使用後端處理完回傳的永久網址)
     authStore.username = profileForm.username
+    localStorage.setItem('username', profileForm.username)
     if (res.data.avatar) {
       authStore.avatar = res.data.avatar
       profileForm.avatar = res.data.avatar
+      localStorage.setItem('avatar', res.data.avatar)
     }
     alert('基本資料更新成功！')
     selectedFile.value = null // 清空已選檔案
@@ -185,12 +190,16 @@ const handleUpdatePassword = async () => {
   try {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
     // 假設你的後端 API 是 /api/user/password
-    const res = await axios.put(`${baseURL}/api/user/password`, {
-      oldPassword: passwordForm.oldPassword,
-      newPassword: passwordForm.newPassword
-    }, {
-      headers: { Authorization: `Bearer ${authStore.token}` }
-    })
+    const res = await axios.put(
+      `${baseURL}/api/user/password`,
+      {
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+      },
+      {
+        headers: { Authorization: `Bearer ${authStore.token}` },
+      },
+    )
 
     alert('密碼更新成功！請牢記您的新密碼。')
     passwordForm.oldPassword = ''
@@ -209,12 +218,12 @@ const handleUpdatePassword = async () => {
 /* 容器設定：限制高度、允許滾動並隱藏滾動條 */
 .page-container {
   height: calc(100vh - 36px); /* 配合畫面高度限制，確保可以觸發內部滾動 */
-  padding: 100px 20px 40px; 
+  padding: 100px 20px 40px;
   box-sizing: border-box;
   overflow-y: auto; /* 資料過多時允許滾動 */
   z-index: 5;
   position: relative;
-  
+
   /* 隱藏滾動條 (跨瀏覽器支持) */
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -271,10 +280,10 @@ const handleUpdatePassword = async () => {
   padding: 40px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
-  
+
   /* 與 LoginView 相同的寬度設定 */
   margin: 0 auto;
-  width: 80vw; 
+  width: 80vw;
   max-width: 650px;
   box-sizing: border-box;
 }
@@ -445,22 +454,23 @@ const handleUpdatePassword = async () => {
   .page-container {
     padding: 80px 15px 20px;
   }
-  
-  .profile-card, .page-header {
-    width: 90%;          /* 手機平板版佔 90% */
-    max-width: 100%;     /* 解除上限限制 */
+
+  .profile-card,
+  .page-header {
+    width: 90%; /* 手機平板版佔 90% */
+    max-width: 100%; /* 解除上限限制 */
   }
 
   .profile-card {
-    padding: 30px 20px; 
+    padding: 30px 20px;
   }
 
   .page-title {
-    font-size: 2rem; 
+    font-size: 2rem;
   }
 
   .input-group input {
-    padding: 10px; 
+    padding: 10px;
   }
 
   .submit-btn {
