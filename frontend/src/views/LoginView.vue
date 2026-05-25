@@ -9,28 +9,50 @@
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div v-if="!isLogin" class="input-group">
           <label>USERNAME</label>
-          <input v-model="formData.username" type="text" placeholder="輸入玩家名稱" required />
+          <input
+            v-model="formData.username"
+            type="text"
+            placeholder="輸入玩家名稱"
+            :disabled="isLoading"
+            required
+          />
         </div>
 
         <div class="input-group">
           <label>EMAIL</label>
-          <input v-model="formData.email" type="email" placeholder="輸入電子郵件" required />
+          <input
+            v-model="formData.email"
+            type="email"
+            placeholder="輸入電子郵件"
+            :disabled="isLoading"
+            required
+          />
         </div>
 
         <div class="input-group">
           <label>PASSWORD</label>
-          <input v-model="formData.password" type="password" placeholder="輸入密碼" required />
+          <input
+            v-model="formData.password"
+            type="password"
+            placeholder="輸入密碼"
+            :disabled="isLoading"
+            required
+          />
         </div>
 
-        <button type="submit" class="submit-btn">
-          {{ isLogin ? '進入系統' : '建立帳號' }}
+        <button type="submit" class="submit-btn" :disabled="isLoading">
+          <span v-if="isLoading">伺服器喚醒中，請稍候...</span>
+          <span v-else>{{ isLogin ? '進入系統' : '建立帳號' }}</span>
         </button>
 
-        <button type="button" class="guest-btn" @click="handleGuestLogin">
+        <button type="button" class="guest-btn" @click="handleGuestLogin" :disabled="isLoading">
           以訪客身分快速體驗
         </button>
 
-        <div class="google-btn-wrapper">
+        <div
+          class="google-btn-wrapper"
+          :style="{ pointerEvents: isLoading ? 'none' : 'auto', opacity: isLoading ? 0.5 : 1 }"
+        >
           <img
             class="googlepic"
             src="../assets/google.jpg"
@@ -41,7 +63,7 @@
       </form>
 
       <div class="auth-footer">
-        <button @click="isLogin = !isLogin" class="switch-btn">
+        <button @click="isLogin = !isLogin" class="switch-btn" :disabled="isLoading">
           {{ isLogin ? '還沒有帳號？點此註冊' : '已有帳號？返回登入' }}
         </button>
       </div>
@@ -58,6 +80,10 @@ import { authStore } from '../stores/user'
 const router = useRouter()
 const route = useRoute()
 const isLogin = ref(true)
+
+// 💡 步驟 1：新增控制載入狀態的變數
+const isLoading = ref(false)
+
 const formData = reactive({
   username: '',
   email: '',
@@ -67,20 +93,27 @@ const formData = reactive({
 const handleRedirect = () => {
   const target = route.query.redirect
   if (target === 'play') {
-    router.push('/play')
+    router.push('/game')
   } else if (target === 'map') {
-    router.push({ path: '/gamehome', query: { view: 'map' } })
+    router.push({ path: '/map', query: { view: 'map' } })
   } else {
-    router.push('/gamehome')
+    router.push('/')
   }
 }
 
 const handleSubmit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
+
+  // 💡 步驟 2：發送請求前，開啟載入狀態
+  isLoading.value = true
+
   try {
-    const res = await axios.post(`http://localhost:3000${endpoint}`, formData)
+    // 這裡整合了你先前搬到環境變數的寫法
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const res = await axios.post(`${baseURL}${endpoint}`, formData)
+
     if (isLogin.value) {
-      authStore.login(res.data.token, res.data.username, res.data.avatar)
+      authStore.login(res.data.token, res.data.user.username, res.data.user.avatar)
       alert('登入成功！')
       handleRedirect()
     } else {
@@ -90,6 +123,9 @@ const handleSubmit = async () => {
   } catch (err) {
     console.error(err)
     alert(err.response?.data?.message || '操作失敗')
+  } finally {
+    // 💡 步驟 3：不論成功或失敗（try 或 catch 結束後），都要關閉載入狀態
+    isLoading.value = false
   }
 }
 
@@ -101,17 +137,21 @@ const handleGuestLogin = () => {
 
 // 修正後的 Google 登入處理
 const handleGoogleResponse = async (response) => {
+  // 💡 Google 登入同樣需要控管載入狀態
+  isLoading.value = true
   try {
-    // response.credential 是 Google 回傳的 ID Token
-    const res = await axios.post(`http://localhost:3000/api/auth/google`, {
-      idToken: response.credential
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const res = await axios.post(`${baseURL}/api/auth/google`, {
+      idToken: response.credential,
     })
-    authStore.login(res.data.token, res.data.username, res.data.avatar)
+    authStore.login(res.data.token, res.data.user.username, res.data.user.avatar)
     alert('Google 登入成功！')
     handleRedirect()
   } catch (err) {
     console.error('Google 驗證失敗詳情:', err.response?.data)
     alert('Google 驗證失敗')
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -119,9 +159,9 @@ const handleGoogleResponse = async (response) => {
 const handleCustomGoogleLogin = () => {
   /* global google */
   if (typeof google !== 'undefined') {
-    google.accounts.id.prompt(); 
+    google.accounts.id.prompt()
   } else {
-    console.error("Google SDK 尚未載入完成");
+    console.error('Google SDK 尚未載入完成')
   }
 }
 
@@ -133,13 +173,13 @@ onMounted(() => {
   script.onload = () => {
     /* global google */
     google.accounts.id.initialize({
-      client_id: "1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com",
+      client_id: '1012315695384-9483vdppk63dktojlbutl4joa53sdsqn.apps.googleusercontent.com',
       callback: handleGoogleResponse,
-      itp_support: true, 
+      itp_support: true,
       use_fedcm_for_prompt: false,
       auto_select: false,
-      context: 'signin'
-    });
+      context: 'signin',
+    })
   }
   document.head.appendChild(script)
 })
@@ -148,14 +188,14 @@ onMounted(() => {
 <style scoped>
 .auth-overlay {
   padding-top: 100px;
-  height: calc(100vh - 36px); 
+  height: calc(100vh - 36px);
   display: flex;
-  align-items: flex-start; 
+  align-items: flex-start;
   justify-content: center;
   background: transparent;
   color: #fff;
-  overflow-y: auto; 
-  padding: 45px 20px; 
+  overflow-y: auto;
+  padding: 45px 20px;
   box-sizing: border-box;
 
   scrollbar-width: none;
@@ -168,14 +208,15 @@ onMounted(() => {
 
 .auth-card {
   margin: 0 auto;
-  width: 100%;
-  max-width: 600px;
+  width: 80vw; 
+  max-width: 650px;
   padding: 40px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(0, 229, 255, 0.2);
   border-radius: 12px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
+  box-sizing: border-box; /* 確保 padding 不會撐破 80% 寬度 */
 }
 
 .auth-title {
@@ -183,8 +224,7 @@ onMounted(() => {
   font-size: 2.5rem;
   letter-spacing: 4px;
   text-align: center;
-  margin-left: 0;
-  padding: 0 150px;
+  margin: 10px auto 10px;
   color: #00e5ff;
   text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
 }
@@ -243,6 +283,13 @@ onMounted(() => {
   box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
 }
 
+.submit-btn:disabled {
+  background: #555555;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .switch-btn {
   background: none;
   border: none;
@@ -275,29 +322,71 @@ onMounted(() => {
   background: rgba(0, 229, 255, 0.05);
 }
 
+.guest-btn:disabled {
+  border-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+}
+
 .google-btn-wrapper {
   width: 100%;
-  display: flex;         
+  display: flex;
   justify-content: center;
-  margin-top: 15px;       
+  margin-top: 15px;
 }
 
 .custom-google-btn {
-  width: 100%;           
-  max-width: 400px;      
+  width: 100%;
+  max-width: 400px;
   height: auto;
   cursor: pointer;
-  transition: transform 0.2s, filter 0.2s;
+  transition:
+    transform 0.2s,
+    filter 0.2s;
 }
 
 .custom-google-btn:hover {
   transform: translateY(-2px);
-  filter: brightness(1.1);    
+  filter: brightness(1.1);
 }
 
 .googlepic {
   width: 55px;
   border-radius: 50px;
   cursor: pointer;
+}
+
+/* ================================
+   響應式設計 (RWD) 斷點 435px
+================================ */
+@media screen and (max-width: 435px) {
+  .auth-overlay {
+    padding: 20px 15px; 
+    padding-top: 80px; 
+  }
+
+  .auth-card {
+    width: 90%;          /* 手機平板版佔 90%，舒適且符合至少 80% 的標準 */
+    max-width: 100%;     /* 解除上限限制 */
+    padding: 30px 20px; 
+  }
+
+  /* 標題置中維持不變 */
+  .auth-title {
+    font-size: 2rem; 
+    padding: 0 !important; 
+    margin: 0 auto;        
+    width: 100%;           
+    text-align: center;    
+    letter-spacing: 2px;
+  }
+
+  .input-group input {
+    padding: 10px; 
+  }
+
+  .submit-btn {
+    padding: 14px;
+  }
 }
 </style>

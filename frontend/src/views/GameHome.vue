@@ -59,7 +59,7 @@
         <!-- Rules card -->
         <button
           class="menu-card rules-card"
-          @click="startGame"
+          @click="startRules"
           :class="{ active: currentSubView === 'rules' }"
         >
           <div class="card-glow rules-glow"></div>
@@ -122,16 +122,20 @@ const startGame = () => {
     router.push({ path: '/loginview', query: { redirect: 'play' } });    
     return
   }
-  router.push('/play');
+  router.push('/game');
+};
+
+const startRules = () => {
+  router.push('/rules');
 };
 
 const handleMapClick = () => {
   if (!authStore.isLoggedIn) {
-    alert('請先登入以查看地圖進度！');
-    router.push({ path: '/loginview', query: { redirect: 'map' } });
+    alert('請先登入以查看世界地圖！');
+    router.push({ path: '/loginview', query: { redirect: 'map' } });    
     return
   }
-  currentSubView.value = 'map'
+  router.push('/map');
 };
 
 onMounted(() => {
