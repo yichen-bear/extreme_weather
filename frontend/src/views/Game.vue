@@ -16,6 +16,36 @@
         </RouterLink>
       </div>
 
+      <div class="gesture-sidebar">
+        <div class="gesture-panel">
+          <div class="gesture-header">手勢控制</div>
+
+          <label class="switch">
+            <input type="checkbox" v-model="isWebcamOn" @change="handleWebcamToggle" />
+            <span class="slider round"></span>
+          </label>
+          <div class="toggle-text">{{ isWebcamOn ? '已開啟' : '已關閉' }}</div>
+
+          <div class="gesture-guide">
+            <div class="guide-item"><span>☝️</span><span>向左</span></div>
+            <div class="guide-item"><span>✌️</span><span>向右</span></div>
+            <div class="guide-item"><span>👍</span><span>Enter</span></div>
+          </div>
+
+          <div class="gesture-content" v-show="isWebcamOn">
+            <div v-if="isLoadingModel" class="gesture-status loading">載入模型中...</div>
+            <div v-if="isLoadingModel" class="gesture-status loading">(第一次載入耗時較久)</div>
+            <div v-else class="gesture-status active">
+              {{ currentGestureDisplay || '等待手勢...' }}
+            </div>
+
+            <div class="webcam-preview-wrapper">
+              <video ref="webcamVideo" autoplay playsinline></video>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="game-container">
         <!-- HUD -->
         <div class="hud">
@@ -102,7 +132,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision'
 
 const gameCanvas = ref(null)
 const score = ref(0)
@@ -133,6 +164,19 @@ const gameStarted = ref(false)
 const selectedCharIndex = ref(0)
 const showLevelPopup = ref(false)
 const nextLevelInfo = ref({ title: '', desc: '' })
+
+// 💡 【新增：手勢辨識相關狀態】
+const isWebcamOn = ref(false)
+const isLoadingModel = ref(false)
+const currentGestureDisplay = ref('')
+const webcamVideo = ref(null)
+const gestureDirection = ref('')
+
+let gestureRecognizer = null
+let webcamStream = null
+let lastVideoTime = -1
+let gestureAnimationFrameId = null
+
 const characters = [
   {
     id: 1,
@@ -639,10 +683,14 @@ const update = () => {
 
   frameCount++
 
-  // 左右移动
-  if (keys['ArrowLeft'] || keys['a']) player.vx = -4.5
-  else if (keys['ArrowRight'] || keys['d']) player.vx = 4.5
-  else player.vx *= 0.85
+  // 左右移动（💡 整合鍵盤與 AI 手勢控制）
+  if (keys['ArrowLeft'] || keys['a'] || gestureDirection.value === 'left') {
+    player.vx = -4.5
+  } else if (keys['ArrowRight'] || keys['d'] || gestureDirection.value === 'right') {
+    player.vx = 4.5
+  } else {
+    player.vx *= 0.85
+  }
 
   windDirection = 0 // 0: 無風, 1: 右, -1: 左
   if (level === 3 || level === 4) {
@@ -1054,6 +1102,118 @@ const drawWindIndicator = (direction) => {
   ctx.restore()
 }
 
+// 💡 【新增：初始化模型與偵測迴圈】
+const initGestureRecognizer = async () => {
+  if (gestureRecognizer) return
+  isLoadingModel.value = true
+  try {
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+    )
+    gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numHands: 1
+    })
+    console.log("MediaPipe 模型載入成功！")
+  } catch (error) {
+    console.error("模型載入失敗：", error)
+  } finally {
+    isLoadingModel.value = false
+  }
+}
+
+const predictWebcamLoop = () => {
+  if (!webcamVideo.value || !gestureRecognizer || !isWebcamOn.value) return
+
+  const video = webcamVideo.value
+  if (video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime
+    const results = gestureRecognizer.recognizeForVideo(video, Date.now())
+
+    if (results.gestures && results.gestures.length > 0) {
+      const topGesture = results.gestures[0][0].categoryName
+      const score = results.gestures[0][0].score
+
+      if (score > 0.65) {
+
+        // 1. 判斷是否為「比讚」：負責關閉彈窗 (Enter)
+        if (topGesture === 'Thumb_Up') {
+          if (showLevelPopup.value) {
+            showLevelPopup.value = false;
+            currentGestureDisplay.value = '👍 確認 (關閉彈窗)';
+          } else {
+            currentGestureDisplay.value = '👍 (無動作)';
+          }
+          gestureDirection.value = ''; // 比讚時不移動
+        }
+
+        // 2. 判斷是否為「向上指」：負責向左移動
+        else if (topGesture === 'Pointing_Up') {
+          gestureDirection.value = 'left';
+          currentGestureDisplay.value = '☝️ 向左';
+        }
+
+        // 3. 判斷是否為「比耶」：負責向右移動
+        else if (topGesture === 'Victory') {
+          gestureDirection.value = 'right';
+          currentGestureDisplay.value = '✌️ 向右';
+        }
+
+        // 4. 其他手勢：不動作
+        else {
+          gestureDirection.value = '';
+          currentGestureDisplay.value = topGesture; // 顯示偵測到的其他手勢名稱
+        }
+
+      } else {
+        // 信心分數不夠時，清除所有動作
+        gestureDirection.value = '';
+        currentGestureDisplay.value = '';
+      }
+    }
+  }
+
+  if (isWebcamOn.value) {
+    gestureAnimationFrameId = requestAnimationFrame(predictWebcamLoop)
+  }
+}
+
+// 💡 【新增：處理滑桿切換】
+const handleWebcamToggle = async () => {
+  // 注意：這裡 isWebcamOn 的值已經被 v-model 改變了
+  if (!isWebcamOn.value) {
+    // 關閉邏輯
+    gestureDirection.value = ''
+    currentGestureDisplay.value = ''
+    if (gestureAnimationFrameId) cancelAnimationFrame(gestureAnimationFrameId)
+    if (webcamStream) {
+      webcamStream.getTracks().forEach(track => track.stop())
+    }
+  } else {
+    // 開啟邏輯
+    await initGestureRecognizer()
+    await nextTick()
+
+    try {
+      webcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 240 }
+      })
+      if (webcamVideo.value) {
+        webcamVideo.value.srcObject = webcamStream
+        webcamVideo.value.addEventListener('loadeddata', predictWebcamLoop)
+      }
+    } catch (err) {
+      console.error("無法啟動 WebCam:", err)
+      isWebcamOn.value = false // 權限被拒絕，把開關切回去
+      alert("請允許網頁存取相機權限！")
+    }
+  }
+}
+
 const loop = () => {
   update()
   draw()
@@ -1079,6 +1239,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelAnimationFrame(animationId)
+  if (gestureAnimationFrameId) cancelAnimationFrame(gestureAnimationFrameId)
+  if (webcamStream) {
+    webcamStream.getTracks().forEach(track => track.stop())
+  }
 })
 </script>
 
@@ -1541,6 +1705,160 @@ canvas {
   animation: pulse 1.5s infinite;
 }
 
+.gesture-sidebar {
+  position: absolute;
+  /* 往右推移，拉開與畫布的距離，對稱於左側的 -130px */
+  right: -140px;
+  top: 70px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+}
+
+.gesture-panel {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  width: 120px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.gesture-header {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* 💡 【新增：滑桿樣式 (Toggle Switch)】 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #374151;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #00e5ff;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.toggle-text {
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* 狀態與視訊 */
+.gesture-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  margin-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+}
+
+.gesture-status {
+  font-size: 12px;
+  text-align: center;
+}
+.gesture-status.loading {
+  color: #fbbf24;
+}
+.gesture-status.active {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.webcam-preview-wrapper {
+  width: 100%;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  background: #000;
+  transform: scaleX(-1); /* 鏡像反轉 */
+}
+
+.webcam-preview-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gesture-guide {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05); /* 淡淡的透明背景 */
+  border: 1px dashed rgba(0, 229, 255, 0.3); /* 科技感的虛線邊框 */
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.guide-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #ccc;
+  letter-spacing: 1px;
+}
+
+.guide-item span:first-child {
+  font-size: 14px; /* 讓 Emoji 大一點 */
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -1555,7 +1873,7 @@ canvas {
 @media (max-width: 790px) {
   .nav-sidebar {
     /* 縮短與畫布的距離，避免小螢幕時超出手機邊界 */
-    left: -55px; 
+    left: -55px;
     top: 70px;
     gap: 10px;
   }
@@ -1571,6 +1889,36 @@ canvas {
 
   /* 隱藏中文字 */
   .nav-text {
+    display: none;
+  }
+
+  .gesture-sidebar {
+    right: -60px; /* 小螢幕時縮小距離 */
+  }
+  .gesture-panel {
+    width: 50px;
+    padding: 8px 4px;
+  }
+  .gesture-header,
+  .toggle-text,
+  .gesture-status,
+  .webcam-preview-wrapper {
+    display: none; /* 小螢幕可能塞不下，可以選擇只保留開關，或隱藏整體 */
+  }
+  .switch {
+    width: 40px;
+    height: 20px;
+  }
+  .slider:before {
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+  }
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+  .gesture-guide {
     display: none;
   }
 }
