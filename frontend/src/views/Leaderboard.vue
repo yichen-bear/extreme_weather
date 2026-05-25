@@ -21,11 +21,11 @@
         <div class="podium-item podium-2" v-if="topThree[1]">
           <div class="podium-avatar-wrapper">
             <div class="podium-avatar">
-              <img v-if="topThree[1].avatar" :src="topThree[1].avatar" alt="avatar" class="lb-avatar-img" />
+              <img v-if="topThree[1].avatar" :src="enforceHttps(topThree[1].avatar)" alt="avatar" class="lb-avatar-img" />
               <span v-else>{{ topThree[1].username ? topThree[1].username.substring(0, 2).toUpperCase() : '??' }}</span>
             </div>
             <div class="char-badge" v-if="topThree[1].final_char">
-              <img v-if="topThree[1].final_char.includes('.png')" :src="topThree[1].final_char" class="lb-avatar-img" />
+              <img v-if="topThree[1].final_char.includes('.png')" :src="enforceHttps(topThree[1].final_char)" class="lb-avatar-img" />
               <div v-else-if="topThree[1].final_char === 'BALL'" class="badge-ball"></div>
             </div>
           </div>
@@ -42,11 +42,11 @@
           <div class="podium-avatar-crown"><i class="fas fa-crown"></i></div>
           <div class="podium-avatar-wrapper">
             <div class="podium-avatar">
-              <img v-if="topThree[0].avatar" :src="topThree[0].avatar" alt="avatar" class="lb-avatar-img" />
+              <img v-if="topThree[0].avatar" :src="enforceHttps(topThree[0].avatar)" alt="avatar" class="lb-avatar-img" />
               <span v-else>{{ topThree[0].username ? topThree[0].username.substring(0, 2).toUpperCase() : '??' }}</span>
             </div>
             <div class="char-badge" v-if="topThree[0].final_char">
-              <img v-if="topThree[0].final_char.includes('.png')" :src="topThree[0].final_char" class="lb-avatar-img" />
+              <img v-if="topThree[0].final_char.includes('.png')" :src="enforceHttps(topThree[0].final_char)" class="lb-avatar-img" />
               <div v-else-if="topThree[0].final_char === 'BALL'" class="badge-ball"></div>
             </div>
           </div>
@@ -62,11 +62,11 @@
         <div class="podium-item podium-3" v-if="topThree[2]">
           <div class="podium-avatar-wrapper">
             <div class="podium-avatar">
-              <img v-if="topThree[2].avatar" :src="topThree[2].avatar" alt="avatar" class="lb-avatar-img" />
+              <img v-if="topThree[2].avatar" :src="enforceHttps(topThree[2].avatar)" alt="avatar" class="lb-avatar-img" />
               <span v-else>{{ topThree[2].username ? topThree[2].username.substring(0, 2).toUpperCase() : '??' }}</span>
             </div>
             <div class="char-badge" v-if="topThree[2].final_char">
-              <img v-if="topThree[2].final_char.includes('.png')" :src="topThree[2].final_char" class="lb-avatar-img" />
+              <img v-if="topThree[2].final_char.includes('.png')" :src="enforceHttps(topThree[2].final_char)" class="lb-avatar-img" />
               <div v-else-if="topThree[2].final_char === 'BALL'" class="badge-ball"></div>
             </div>
           </div>
@@ -96,11 +96,11 @@
           <div class="lb-player-info">
             <div class="list-avatar-wrapper">
               <div class="lb-player-avatar-placeholder">
-                <img v-if="entry.avatar" :src="entry.avatar" alt="avatar" class="lb-avatar-img" />
+                <img v-if="entry.avatar" :src="enforceHttps(entry.avatar)" alt="avatar" class="lb-avatar-img" />
                 <span v-else>{{ entry.username ? entry.username.substring(0, 2).toUpperCase() : '??' }}</span>
               </div>
               <div class="char-badge list-badge" v-if="entry.final_char">
-                <img v-if="entry.final_char.includes('.png')" :src="entry.final_char" class="lb-avatar-img" />
+                <img v-if="entry.final_char.includes('.png')" :src="enforceHttps(entry.final_char)" class="lb-avatar-img" />
                 <div v-else-if="entry.final_char === 'BALL'" class="badge-ball"></div>
               </div>
             </div>
@@ -154,6 +154,15 @@ const formatTimestamp = (timestampString) => {
   const min = String(date.getMinutes()).padStart(2, '0')
   const ss = String(date.getSeconds()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd} // ${hh}:${min}:${ss}`
+}
+
+// 將不安全的 http 網址強制轉換為 https
+const enforceHttps = (url) => {
+  if (!url) return ''
+  if (typeof url === 'string' && url.startsWith('http://')) {
+    return url.replace('http://', 'https://')
+  }
+  return url
 }
 
 onMounted(async () => {

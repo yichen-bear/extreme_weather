@@ -22,48 +22,55 @@ const storage = multer.diskStorage({
 	filename: function (req, file, cb) {
 		// 給圖片一個不重複的檔名 (時間戳 + 原本的副檔名)
 		cb(null, Date.now() + path.extname(file.originalname));
-	}
+	},
 });
 const upload = multer({ storage: storage });
 
-
 // 1. 更新基本資料 (改用 upload.single('avatarFile') 接收檔案)
-router.put("/profile", verifyToken, upload.single("avatarFile"), async (req, res) => {
-	const { username } = req.body;
-	const userId = req.user.userId;
+router.put(
+	"/profile",
+	verifyToken,
+	upload.single("avatarFile"),
+	async (req, res) => {
+		const { username } = req.body;
+		const userId = req.user.userId;
 
-	try {
-		const { rows: existingUser } = await db.query(
-			"SELECT id FROM users WHERE username = $1 AND id != $2",
-			[username, userId]
-		);
-		
-		if (existingUser.length > 0) {
-			return res.status(400).json({ message: "這個玩家名稱已經被別人使用了！" });
+		try {
+			const { rows: existingUser } = await db.query(
+				"SELECT id FROM users WHERE username = $1 AND id != $2",
+				[username, userId],
+			);
+
+			if (existingUser.length > 0) {
+				return res
+					.status(400)
+					.json({ message: "這個玩家名稱已經被別人使用了！" });
+			}
+
+			// 💡 處理圖片網址
+			let avatarUrl = req.body.avatar; // 如果使用者沒換圖片，會傳舊的網址過來
+
+			if (req.file) {
+				// 如果有上傳新檔案，組合出新的圖片網址 (動態抓取目前的 host)
+				const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+				const domain = protocol + "://" + req.get("host");
+				avatarUrl = `${domain}/uploads/${req.file.filename}`;
+			}
+
+			// 更新資料庫
+			await db.query(
+				"UPDATE users SET username = $1, avatar = $2 WHERE id = $3",
+				[username, avatarUrl, userId],
+			);
+
+			// 💡 把更新後的頭像網址回傳給前端
+			res.json({ message: "基本資料更新成功", avatar: avatarUrl });
+		} catch (err) {
+			console.error("更新基本資料錯誤:", err);
+			res.status(500).json({ message: "伺服器錯誤" });
 		}
-
-		// 💡 處理圖片網址
-		let avatarUrl = req.body.avatar; // 如果使用者沒換圖片，會傳舊的網址過來
-
-		if (req.file) {
-			// 如果有上傳新檔案，組合出新的圖片網址 (動態抓取目前的 host)
-			const domain = req.protocol + "://" + req.get("host");
-			avatarUrl = `${domain}/uploads/${req.file.filename}`;
-		}
-
-		// 更新資料庫
-		await db.query(
-			"UPDATE users SET username = $1, avatar = $2 WHERE id = $3",
-			[username, avatarUrl, userId]
-		);
-
-		// 💡 把更新後的頭像網址回傳給前端
-		res.json({ message: "基本資料更新成功", avatar: avatarUrl });
-	} catch (err) {
-		console.error("更新基本資料錯誤:", err);
-		res.status(500).json({ message: "伺服器錯誤" });
-	}
-});
+	},
+);
 
 // 2. 更新密碼
 // 路徑: PUT /api/user/password
@@ -75,7 +82,7 @@ router.put("/password", verifyToken, async (req, res) => {
 		// 先從資料庫找出該使用者
 		const { rows: users } = await db.query(
 			"SELECT * FROM users WHERE id = $1",
-			[userId]
+			[userId],
 		);
 
 		if (users.length === 0) {
@@ -99,10 +106,10 @@ router.put("/password", verifyToken, async (req, res) => {
 		const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
 		// 更新資料庫中的密碼
-		await db.query(
-			"UPDATE users SET password_hash = $1 WHERE id = $2",
-			[hashedNewPassword, userId]
-		);
+		await db.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+			hashedNewPassword,
+			userId,
+		]);
 
 		res.json({ message: "密碼更新成功" });
 	} catch (err) {
