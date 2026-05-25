@@ -504,7 +504,7 @@ onMounted(async () => {
 @keyframes noise-anim { 0% { clip: rect(10px, 9999px, 50px, 0); } 5% { clip: rect(30px, 9999px, 20px, 0); } 20% { clip: rect(0, 9999px, 0, 0); } 100% { clip: rect(0, 9999px, 0, 0); } }
 
 /* ===== RWD ===== */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .leaderboard-container { padding-top: 90px; padding-left: 20px; padding-right: 20px; }
   
   .podium-section { gap: 10px; }
@@ -519,8 +519,30 @@ onMounted(async () => {
   .step-2 { height: 100px; }
   .step-3 { height: 80px; }
 
-  .lb-item { grid-template-columns: 50px 1fr; gap: 10px; padding: 15px 20px; }
-  .lb-rank-num { font-size: 28px; }
-  .lb-score-section { grid-column: 1 / -1; padding: 10px 0 0; margin-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.05); flex-direction: row; justify-content: space-between; align-items: center; }
+  /* ===== 以下為修改的部分 ===== */
+  /* 將原本的 2 欄改為 3 欄 (名次 | 資訊 | 分數)，最後一欄用 auto 適應內容 */
+  .lb-item { 
+    grid-template-columns: 40px 1fr auto; 
+    gap: 10px; 
+    padding: 12px 15px; 
+  }
+  
+  /* 稍微縮小名次字體以節省空間 */
+  .lb-rank-num { font-size: 24px; } 
+  
+  /* 移除強制換行 (grid-column: 1 / -1) 與上邊框，讓它維持在右側 */
+  .lb-score-section { 
+    grid-column: auto; 
+    padding: 0; 
+    margin-top: 0; 
+    border-top: none; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: flex-end; 
+  }
+
+  /* 縮小玩家名字與分數的字體，避免在極小螢幕上相互擠壓 */
+  .lb-name { font-size: 14px; }
+  .lb-score { font-size: 20px; }
 }
 </style>
