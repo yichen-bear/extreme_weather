@@ -171,6 +171,7 @@ const isLoadingModel = ref(false)
 const currentGestureDisplay = ref('')
 const webcamVideo = ref(null)
 const gestureDirection = ref('')
+const currentPlayMode = ref('normal')
 
 let gestureRecognizer = null
 let webcamStream = null
@@ -248,7 +249,7 @@ const updateBackendLevel = async (levelNum, currentScore = 0, charImg = '') => {
   if (!columnName) return
 
   // 💡 【新增】如果是結算(levelNum === 4)且開啟了手勢(isWebcamOn)，就把欄位改成 levelgesture
-  if (levelNum === 4 && isWebcamOn.value) {
+  if (levelNum === 4 && currentPlayMode.value === 'gesture') {
     columnName = 'levelgesture'
   }
 
@@ -335,6 +336,7 @@ const updatePlayerSkin = () => {
 
 const startGame = () => {
   gameStarted.value = true
+  currentPlayMode.value = isWebcamOn.value ? 'gesture' : 'normal'
   resetGame() // 確保遊戲數據重置
   loop() // 正式開始動畫循環
 }
@@ -689,10 +691,23 @@ const update = () => {
 
   frameCount++
 
-  // 左右移动（💡 整合鍵盤與 AI 手勢控制）
-  if (keys['ArrowLeft'] || keys['a'] || gestureDirection.value === 'left') {
+  // 左右移动（💡 嚴格分離鍵盤與 AI 手勢控制）
+  let isMovingLeft = false
+  let isMovingRight = false
+
+  if (currentPlayMode.value === 'gesture') {
+    // 手勢模式：只吃手勢方向，忽略鍵盤
+    isMovingLeft = gestureDirection.value === 'left'
+    isMovingRight = gestureDirection.value === 'right'
+  } else {
+    // 一般模式：只吃鍵盤方向
+    isMovingLeft = keys['ArrowLeft'] || keys['a']
+    isMovingRight = keys['ArrowRight'] || keys['d']
+  }
+
+  if (isMovingLeft) {
     player.vx = -4.5
-  } else if (keys['ArrowRight'] || keys['d'] || gestureDirection.value === 'right') {
+  } else if (isMovingRight) {
     player.vx = 4.5
   } else {
     player.vx *= 0.85
@@ -906,7 +921,7 @@ const update = () => {
 
 // ----- 绘图部分（保留原配色 + 氛围）-----
 const playerImage = new Image()
-playerImage.src = "/fall.png"
+playerImage.src = '/fall.png'
 
 const getLevelForSky = () => {
   const s = score.value
