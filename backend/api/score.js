@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db'); 
-
-// 只保留這一行，拿掉原本重複的那行 const verifyToken = require('./auth');
 const { verifyToken } = require('./auth'); 
 
 // 更新通關紀錄或最高高度
@@ -14,13 +12,15 @@ router.post('/update-level', verifyToken, async (req, res) => {
   const userId = req.user.userId;
   const { levelColumn, score, character } = req.body;
 
-  const allowedColumns = ["levelnew", "levelflood", "levelfire", "levelwind", "levelfinal"];
+  // 1. 將新的 'levelgesture' 加入允許的欄位名單
+  const allowedColumns = ["levelnew", "levelflood", "levelfire", "levelwind", "levelfinal", "levelgesture"];
   if (!allowedColumns.includes(levelColumn)) {
     return res.status(400).json({ message: '無效的欄位名稱' });
   }
 
   try {
-    if (levelColumn === 'levelfinal') {
+    // 2. 將判斷邏輯擴充，同時支援一般模式(levelfinal)與手勢模式(levelgesture)
+    if (levelColumn === 'levelfinal' || levelColumn === 'levelgesture') {
       if (score === undefined || !character) {
         return res.status(400).json({ message: '缺少高度或角色參數' });
       }
@@ -31,7 +31,7 @@ router.post('/update-level', verifyToken, async (req, res) => {
       }
 
       const currentRes = await pool.query(
-        `SELECT levelfinal FROM users WHERE id = $1`, 
+        `SELECT ${levelColumn} FROM users WHERE id = $1`, 
         [userId]
       );
       
@@ -39,11 +39,15 @@ router.post('/update-level', verifyToken, async (req, res) => {
         return res.status(404).json({ message: '找不到該使用者' });
       }
 
-      const currentHighest = currentRes.rows[0]?.levelfinal || 0;
+      // 動態抓取該模式目前的最高分
+      const currentHighest = currentRes.rows[0]?.[levelColumn] || 0;
 
       if (numericScore > currentHighest) {
+        // 判斷要更新的角色欄位是哪一個
+        const charColumn = levelColumn === 'levelfinal' ? 'final_char' : 'gesture_char';
+        
         await pool.query(
-          `UPDATE users SET levelfinal = $1, final_char = $2 WHERE id = $3`,
+          `UPDATE users SET ${levelColumn} = $1, ${charColumn} = $2 WHERE id = $3`,
           [Math.floor(numericScore), character, userId]
         );
         return res.json({ message: '🎉 突破個人最高極限！已更新紀錄。', updated: true });
@@ -52,6 +56,7 @@ router.post('/update-level', verifyToken, async (req, res) => {
       }
     } 
     else {
+      // 其他一般關卡解鎖邏輯保持不變
       const updateRes = await pool.query(
         `UPDATE users SET ${levelColumn} = true WHERE id = $1`,
         [userId]
@@ -70,18 +75,24 @@ router.post('/update-level', verifyToken, async (req, res) => {
   }
 });
 
+// 3. 修改排行榜 API，接受模式參數 (mode)
 router.get('/leaderboard', async (req, res) => {
   try {
-    // 直接撈取 username, avatar, levelfinal, final_char
+    // 預設抓取一般遊玩(normal)，如果有傳入 mode=gesture 則抓取手勢遊玩
+    const mode = req.query.mode; 
+    const scoreCol = mode === 'gesture' ? 'levelgesture' : 'levelfinal';
+    const charCol = mode === 'gesture' ? 'gesture_char' : 'final_char';
+
+    // 這裡我們在 SQL 中使用 AS 幫欄位統一命名為 score 和 character，方便前端統一處理資料
     const result = await pool.query(
       `SELECT 
         username, 
         avatar, 
-        levelfinal, 
-        final_char
+        ${scoreCol} AS score, 
+        ${charCol} AS character
        FROM users 
-       WHERE levelfinal > 0 
-       ORDER BY levelfinal DESC 
+       WHERE ${scoreCol} > 0 
+       ORDER BY ${scoreCol} DESC 
        LIMIT 10`
     );
 

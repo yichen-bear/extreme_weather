@@ -244,8 +244,13 @@ const LEVEL_COLUMN_MAP = {
 }
 
 const updateBackendLevel = async (levelNum, currentScore = 0, charImg = '') => {
-  const columnName = LEVEL_COLUMN_MAP[levelNum]
+  let columnName = LEVEL_COLUMN_MAP[levelNum]
   if (!columnName) return
+
+  // 💡 【新增】如果是結算(levelNum === 4)且開啟了手勢(isWebcamOn)，就把欄位改成 levelgesture
+  if (levelNum === 4 && isWebcamOn.value) {
+    columnName = 'levelgesture'
+  }
 
   const token = localStorage.getItem('token')
   if (!token) {
@@ -260,7 +265,8 @@ const updateBackendLevel = async (levelNum, currentScore = 0, charImg = '') => {
       levelColumn: columnName,
     }
 
-    if (columnName === 'levelfinal') {
+    // 💡 【修改】這裡同時支援一般模式與手勢模式上傳分數
+    if (columnName === 'levelfinal' || columnName === 'levelgesture') {
       requestBody.score = Math.floor(currentScore)
       requestBody.character = charImg
     }
@@ -668,7 +674,7 @@ const update = () => {
       currentJumpForce = -8.5
       break
     case 2: // 🔥 野火燎原
-      currentGravity = 0.28   // 數字越大，掉落越快
+      currentGravity = 0.28 // 數字越大，掉落越快
       currentJumpForce = -8.8 // 負得越多，跳得越高、越猛
       break
     case 3: // 🌀 狂風大作
@@ -676,7 +682,7 @@ const update = () => {
       currentJumpForce = -9.2
       break
     case 4: // ⚡ 最終試煉 (原本會回到預設值，現在你可以單獨設定它)
-      currentGravity = 0.35   // 讓最終關卡手感最沉重
+      currentGravity = 0.35 // 讓最終關卡手感最沉重
       currentJumpForce = -9.5 // 給予相應的最強彈跳力
       break
   }
@@ -1108,19 +1114,20 @@ const initGestureRecognizer = async () => {
   isLoadingModel.value = true
   try {
     const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm',
     )
     gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
       baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
-        delegate: "GPU"
+        modelAssetPath:
+          'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task',
+        delegate: 'GPU',
       },
-      runningMode: "VIDEO",
-      numHands: 1
+      runningMode: 'VIDEO',
+      numHands: 1,
     })
-    console.log("MediaPipe 模型載入成功！")
+    console.log('MediaPipe 模型載入成功！')
   } catch (error) {
-    console.error("模型載入失敗：", error)
+    console.error('模型載入失敗：', error)
   } finally {
     isLoadingModel.value = false
   }
@@ -1139,40 +1146,38 @@ const predictWebcamLoop = () => {
       const score = results.gestures[0][0].score
 
       if (score > 0.65) {
-
         // 1. 判斷是否為「比讚」：負責關閉彈窗 (Enter)
         if (topGesture === 'Thumb_Up') {
           if (showLevelPopup.value) {
-            showLevelPopup.value = false;
-            currentGestureDisplay.value = '👍 確認 (關閉彈窗)';
+            showLevelPopup.value = false
+            currentGestureDisplay.value = '👍 確認 (關閉彈窗)'
           } else {
-            currentGestureDisplay.value = '👍 (無動作)';
+            currentGestureDisplay.value = '👍 (無動作)'
           }
-          gestureDirection.value = ''; // 比讚時不移動
+          gestureDirection.value = '' // 比讚時不移動
         }
 
         // 2. 判斷是否為「向上指」：負責向左移動
         else if (topGesture === 'Pointing_Up') {
-          gestureDirection.value = 'left';
-          currentGestureDisplay.value = '☝️ 向左';
+          gestureDirection.value = 'left'
+          currentGestureDisplay.value = '☝️ 向左'
         }
 
         // 3. 判斷是否為「比耶」：負責向右移動
         else if (topGesture === 'Victory') {
-          gestureDirection.value = 'right';
-          currentGestureDisplay.value = '✌️ 向右';
+          gestureDirection.value = 'right'
+          currentGestureDisplay.value = '✌️ 向右'
         }
 
         // 4. 其他手勢：不動作
         else {
-          gestureDirection.value = '';
-          currentGestureDisplay.value = topGesture; // 顯示偵測到的其他手勢名稱
+          gestureDirection.value = ''
+          currentGestureDisplay.value = topGesture // 顯示偵測到的其他手勢名稱
         }
-
       } else {
         // 信心分數不夠時，清除所有動作
-        gestureDirection.value = '';
-        currentGestureDisplay.value = '';
+        gestureDirection.value = ''
+        currentGestureDisplay.value = ''
       }
     }
   }
@@ -1191,7 +1196,7 @@ const handleWebcamToggle = async () => {
     currentGestureDisplay.value = ''
     if (gestureAnimationFrameId) cancelAnimationFrame(gestureAnimationFrameId)
     if (webcamStream) {
-      webcamStream.getTracks().forEach(track => track.stop())
+      webcamStream.getTracks().forEach((track) => track.stop())
     }
   } else {
     // 開啟邏輯
@@ -1200,16 +1205,16 @@ const handleWebcamToggle = async () => {
 
     try {
       webcamStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 320, height: 240 }
+        video: { width: 320, height: 240 },
       })
       if (webcamVideo.value) {
         webcamVideo.value.srcObject = webcamStream
         webcamVideo.value.addEventListener('loadeddata', predictWebcamLoop)
       }
     } catch (err) {
-      console.error("無法啟動 WebCam:", err)
+      console.error('無法啟動 WebCam:', err)
       isWebcamOn.value = false // 權限被拒絕，把開關切回去
-      alert("請允許網頁存取相機權限！")
+      alert('請允許網頁存取相機權限！')
     }
   }
 }
@@ -1241,7 +1246,7 @@ onUnmounted(() => {
   cancelAnimationFrame(animationId)
   if (gestureAnimationFrameId) cancelAnimationFrame(gestureAnimationFrameId)
   if (webcamStream) {
-    webcamStream.getTracks().forEach(track => track.stop())
+    webcamStream.getTracks().forEach((track) => track.stop())
   }
 })
 </script>
