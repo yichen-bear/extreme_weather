@@ -76,9 +76,9 @@ const selectedRegion = ref('');    // 記錄點擊的地區
 
 // 地圖鎖定功能 預設0
 const lockStatus = ref({
-  levelfire: true,
-  levelflood: true,
-  levelwind: true
+  levelfire: false,
+  levelflood: false,
+  levelwind: false
 });
 
 // 2. 生命週期：網頁載入後自動啟動 Image Map 縮放修正
