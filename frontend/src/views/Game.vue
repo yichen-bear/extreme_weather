@@ -906,7 +906,7 @@ const update = () => {
 
 // ----- 绘图部分（保留原配色 + 氛围）-----
 const playerImage = new Image()
-playerImage.src = new URL('../assets/fall.png', import.meta.url).href
+playerImage.src = "/fall.png"
 
 const getLevelForSky = () => {
   const s = score.value
