@@ -60,7 +60,7 @@
 
           <div v-if="currentEvent.pages[0].mapUrl" class="map-section">
             <p class="section-title">地理位置參考</p>
-            <iframe :src="currentEvent.pages[0].mapUrl" width="100%" height="250" style="border:0; border-radius:15px;"></iframe>
+            <iframe :src="currentEvent.pages[0].mapUrl" width="100%" height="200" style="border:0; border-radius:15px;"></iframe>
           </div>
 
           <div v-if="currentEvent.pages[0].twitterEmbed" class="twitter-section">
@@ -113,6 +113,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted} from 'vue';
+const mapContainer = ref(null);
 
 // 接收從 MapView 傳進來的所有事件陣列
 const props = defineProps({
@@ -134,14 +135,21 @@ const currentEvent = computed(() => {
 
 // 3. 處理不同災害標籤的顏色
 const getCategoryColor = (type) => {
-  const colors = {
-    wildfire: 'rgb(215, 69, 50)',
-    flood: 'rgb(88, 142, 243)',    
-    storm: 'rgb(245, 238, 103)'     
-  };
-  return colors[type] || '#64748b';
-};
+  console.log("【目前這張卡片的真實 type 是】:", type);
+  switch (type) {
+    case 'wildfire': 
+      return '#ef4444'; // 紅色
+    case 'flood': 
+      return '#3b82f6';    // 藍色
 
+    // 💡 加上單引號，'tropical-cyclone' 就不會被誤認成減法
+    case 'storm':
+    case 'tropical-cyclone':
+    case 'tropical_cyclone':
+      return '#e8c519'; // 黃色  
+    default: return '#94a8c3'; // 灰色（預設
+  }
+};
 
 //手動叫 Twitter 重新解析內容
 const renderTwitter = () => {
@@ -178,8 +186,8 @@ onMounted(() => {
 .disaster-card {
   background: white; 
   width: 95%; 
-  max-width: 580px;
-  border-radius: 31px; 
+  max-width: 564px;
+  border-radius: 22px; 
   overflow: hidden;
   box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
   max-height: 81vh; 
@@ -197,7 +205,7 @@ onMounted(() => {
   display: flex; 
   flex-direction: column;
   justify-content: space-between; 
-  padding: 23px 24px 15px 24px; /* 上、右、下、左 */
+  padding: 21px 16px 15px 21px; /* 上、右、下、左 */
 }
 .header-overlay {
   position: absolute; 
@@ -215,11 +223,11 @@ onMounted(() => {
 .badge {
   padding: 2px 10px;
   border-radius: 9px;
-  color: white;
+  color: rgba(255, 255, 255, 0.969);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 0.15em;
-  opacity: 0.81;
+  opacity: 0.85;
 }
 .close-btn {
   width: 36px; height: 36px; background: rgba(0, 0, 0, 0.3);
@@ -241,9 +249,9 @@ onMounted(() => {
 }
 .title {
   color: white;
-  font-size: 28px;
+  font-size: 23px;
   font-weight: 550;
-  margin-top:8px;
+  margin-top:7px;
   margin-bottom: 5px;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -255,7 +263,7 @@ onMounted(() => {
   gap: 12px;
   align-items: center;
   color: rgba(255,255,255,0.9);
-  font-size: 12px;
+  font-size: 10px;
   padding: 1px 0px 1px 0px
 }
 .date-tag {
@@ -266,7 +274,7 @@ onMounted(() => {
 }
 .subtitle-tag {
   margin-top: 4px;
-  font-size: 11px;         /* 調整文字大小，可以根據需要改為 12px 或 14px */
+  font-size: 9px;         /* 調整文字大小，可以根據需要改為 12px 或 14px */
   font-weight: 400;       /* 文字加粗 */
   color: #f8fafc;         /* 設定成接近白色的淺灰色，配合深色圖片背景 */
   letter-spacing: 0.05em; /* 稍微增加字母間距，更有設計感 */
@@ -284,7 +292,7 @@ onMounted(() => {
 /*=====白色卡身=====*/
 .card-body {
   margin-top:3px;
-  padding: 19px 32px 21px 32px; 
+  padding: 20px 32px 21px 34px; 
   overflow-y: auto; 
   flex: 1;
   display: flex;
@@ -293,7 +301,7 @@ onMounted(() => {
 .content-scroll {   /*卡身文字樣式*/
   color: #434952;
   line-height: 1.7;
-  font-size: 13.5px;
+  font-size: 12px;
   margin-bottom: 12.7px;/* 主資料 <=> 和R&R的距離 */
 }
 .content-scroll p {   /*換行、文句格式*/
@@ -307,14 +315,15 @@ onMounted(() => {
 
 /*=========影響資訊區============*/
 .impact-section {   /*淺藍色影響區塊*/
-  /* 外距 上右下左*/ margin: -2px -6px -3px -6px; 
-  padding: 15px 30px 15px 28px; 
+  /* 外距 上右下左*/ margin: -6px -6px -3px -6px; 
+  padding: 1px 25px 16px 25px; 
   background: #f8fafc;
   border-radius: 8px;
 }
 .stat-item {    /*影響資訊內部小白格子*/
   background: white;
-  padding: 7.6px; /*白框與文字之間*/
+  margin-right: 0px;
+  padding: 6px; /*白框與文字之間*/
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -326,7 +335,7 @@ onMounted(() => {
   display: grid;
   /* 關鍵：如果空間夠就排兩列，不夠就自動換行 */
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
-  gap: 18px;
+  gap: 16px;
 }
 
 
@@ -335,9 +344,11 @@ onMounted(() => {
   text-align: left;
   width: 100%;
   margin-top: 0px;
+  margin-bottom: 6.5px;
+  font-weight: 700;
 }
 .image-section {    /*圖片*/
-  margin-top: 27px;
+  margin-top: 18px;
   display: flex;
   flex-direction: column;
   /* 關鍵：確保內部的標題與圖片都置中 */
@@ -345,30 +356,37 @@ onMounted(() => {
   width: 100%;
 }
 .detail-image {   /*圖片細節調整*/
-  /* 關鍵：防止圖片超出卡片範圍 */
-  margin-top: 12px; 
+  margin-top: 7px; 
   max-width: 100%; 
   /* height: 220px;      /* 保持比例 */
   border-radius: 16px;
   /*object-fit: cover;*/
   box-shadow: 0 3px 11px rgba(0,0,0,0.1);
-  /* 確保它是區塊元素以便置中 */
   display: block;
-  
   width: auto; 
   max-width: 100%;
 
   /* 2. 高度：這是關鍵！限制一個適中的高度，確保不用捲動就能看完整張 */
   /* 建議設定在 250px - 350px 之間，視妳卡片剩餘空間而定 */
-  max-height: 280px;
+  max-height: 205px;
   object-fit: contain;
+  max-width: 100%;
+
 }
 
 
 /**==========卡身地圖補充區================*/
-.map-section{
-  margin-top: 30px;
-  border-radius:15px;
+.map-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 14px;
+  border-radius: 15px;
+  margin-bottom: 2px;
+ /* 🎯 關鍵一：確保父容器絕對不會阻擋或吞掉任何滑動手勢 */
+  pointer-events: auto !important;
+  touch-action: auto !important;
 }
 .card-body::-webkit-scrollbar {
   width: 6px;
@@ -381,23 +399,25 @@ onMounted(() => {
 
 /**==========卡身推文區================**/
 .twitter-section {
-  margin-top: 24px 0;
   width: 100%;
+}
+.section-title{
+  margin-top: 21px;
 }
 .twitter-container {
   display: flex;
   justify-content: center; /* 讓推文卡片在中間 */
-  background: #f8fafc;
   width:100%;
-  padding: 10px;
   border-radius: 16px;
-  min-height: 100px; /* 預留空間防止抖動 */
+  height: 379px !important;
+  overflow: hidden;
 }
 /* 確保推文寬度不會撐破卡片 */
 .twitter-container :deep(.twitter-tweet) {
   margin: 0 auto !important;
+  transform: scale(0.61) !important;
+  transform-origin: top center !important;
 }
-
 
 /*==============引用&參考資料區========*/
 .source-section {  /*藍色參考資料div區塊*/
@@ -406,7 +426,7 @@ onMounted(() => {
   border-radius: 11px;
 }
 .source-label {   /*Reference & Resorces*/
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   color: #94a8c3;
   letter-spacing: 0.1em;
@@ -424,7 +444,7 @@ onMounted(() => {
   flex-direction: column;
   color: #2563eb;
   text-decoration: none;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 550;
   margin-right: 16px;
 }
@@ -436,11 +456,12 @@ onMounted(() => {
   justify-content: space-between; 
   align-items: center;
   border-top: 2px solid #f1f5f9; 
-  margin-top: 8.3px; /* border線段和R&R的距離 */
-  padding-top: 10px; /* 按鈕和線段距離 */
+  margin-top: 9px; /* border線段和R&R的距離 */
+  padding-top: 9px; /* 按鈕和線段距離 */
   margin-left: -2px;
 }
 .page-indicator {   /**頁碼*/
+  margin-top:2px;
   font-size: 12px;
   font-weight: 900;
   color: #64748b;
@@ -458,5 +479,118 @@ onMounted(() => {
 }
 .nav-btn:disabled {   /**按鈕顏色控制*/
   opacity: 0.2; cursor: not-allowed;}
+@media (max-width: 800px) {
+  .close-btn {
+  width: 33px; height: 33px; background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%; border: none; cursor: pointer !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+  padding: 0;
+  margin-left: auto;
+  }
+  .close-icon {
+  font-size: 17px;      /* 調整叉叉的大小 */
+  line-height: 1;       /* 避免行高影響置中 */
+  font-family: Arial, sans-serif; /* 確保不同裝置看到的叉叉形狀一致 */
+  color: white;
+  pointer-events: none; /* 讓叉叉符號本身不接收點擊，點擊會直接傳給外層的 button */
+  user-select: none;    /* 防止被選取成 I 游標 */
+  }
+  .badge {
+  padding: px 10px;
+  border-radius: 9px;
+  color: rgb(255, 255, 255);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  }
+  .title {
+  color: white;
+  font-size: 22px;
+  font-weight: 550;
+  margin-top:8px;
+  margin-bottom: 5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  }
+  .info-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: rgba(255,255,255,0.9);
+  font-size: 10px;
+  padding: 2px 0px 1px 0px
+  }
+  .date-tag {
+  background: rgba(255,255,255,0.2);
+  padding: 0px 6px;
+  border-radius: 4px;
+  margin-top: 1.8px;
+  }
+.subtitle-tag {
+  margin-top: 5px;
+  font-size: 9px;         /* 調整文字大小，可以根據需要改為 12px 或 14px */
+  font-weight: 400;       /* 文字加粗 */
+  color: #f8fafc;         /* 設定成接近白色的淺灰色，配合深色圖片背景 */
+  letter-spacing: 0.05em; /* 稍微增加字母間距，更有設計感 */
+  font-style: italic;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.2;
+  }
 
+  .card-body {
+  margin-top: 0px;
+  padding: 20px 32px 21px 34px; 
+  overflow-y: auto; 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+ }
+ .content-scroll {   /*卡身文字樣式*/
+  color: #434952;
+  line-height: 1.7;
+  font-size: 12px;
+  margin-bottom: 13px;/* 主資料 <=> 和R&R的距離 */
+ }
+
+  .pagination {   /*翻頁區div區塊*/
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  border-top: 2px solid #f1f5f9; 
+  margin-top: 8px; /* border線段和R&R的距離 */
+  padding-top: 7px; /* 按鈕和線段距離 */
+  margin-left: -2px;
+  }
+  .page-indicator {   /**頁碼*/
+  margin-top:2px;
+  font-size: 10.5px;
+  font-weight: 900;
+  color: #64748b;
+  letter-spacing: 0.2em;
+  }
+  .nav-btn {    /*NEXT按鈕*/
+  background: none;
+  border: none;
+  color: #64748b;
+  font-weight: 900;
+  font-size: 10px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 10px 10px 8px 10px;
+  }
+  .source-links {
+  /* links之間 */
+  display: flex;         /* 啟動彈性佈局 */
+  flex-wrap: wrap;       /* 核心：允許內容折行 */
+  width: 100%;           /* 確保撐滿寬度 */
+  line-height: 1.3;
+  }
+}
 </style>

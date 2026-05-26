@@ -12,6 +12,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const allowedOrigins = [
 	"http://localhost:5173", // 本地開發用
 	"https://extreme-weather-red.vercel.app", // 你的 Vercel 前端正式網址
+    "http://127.0.0.1:5173",    // 為了安全起見，把 IP 版也補上
 ];
 
 // 2. 再掛載 cors 中間件

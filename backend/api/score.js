@@ -103,4 +103,26 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
+//通關狀態
+router.get('/levels', verifyToken, async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const result = await pool.query(
+      `SELECT levelfire, levelflood, levelwind FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: '找不到使用者' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ 取得通關資料錯誤:", err);
+    res.status(500).json({ message: '伺服器內部錯誤' });
+  }
+});
+
 module.exports = router;
+
