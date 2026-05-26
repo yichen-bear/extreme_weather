@@ -85,23 +85,32 @@ const lockStatus = ref({
 onMounted(async () => {
   imageMapResize();
 
-  // 地圖解鎖功能
   try {
-    // VITE_API_URL 就是妳在 .env 設定的 http://localhost:3000
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/score`);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/score/levels`, {
+      method: 'GET',
+      headers: {
+      Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`讀取通關資料失敗：${response.status}`);
+    }
+
     const data = await response.json();
-    
-    // 把資料庫的 TRUE / FALSE 存進我們的 lockStatus
+
     lockStatus.value = {
       levelfire: data.levelfire,
       levelflood: data.levelflood,
       levelwind: data.levelwind
     };
+
+    console.log("目前通關狀態：", lockStatus.value);
   } catch (error) {
-    console.error("抓取資料庫解鎖狀態失敗:", error);
+    console.error("讀取通關狀態失敗：", error);
   }
 });
-
 
 // 3. 函式定義
 // 切換地圖圖層
@@ -207,17 +216,6 @@ const currentRegionEvents = computed(() => {
   transition: all 0.2s ease;
   font-size: 0.8rem;    /* 🔑 控制按鈕內字體大小 */
   box-sizing: border-box;
-}
-
-.legend-item.is-locked {
-  opacity: 0.5;          
-  cursor: not-allowed;   
-  background-color: #f5f5f5;
-}
-
-.legend-item.is-locked:hover {
-  background-color: #f5f5f5; 
-  color: inherit;
 }
 
 .lock-icon {
