@@ -782,7 +782,7 @@ export const allEvents = [
   {
     id: 'typhoon-tw-88',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '八八風災 (The 88 Flood)',
     location: 'Taiwan',
     date: '2009/8/8',
@@ -808,7 +808,7 @@ export const allEvents = [
   {
     id: 'typhoon-jp-talas',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '2022 塔拉斯颱風 (Tropical Storm Talas)',
     location: 'Central Japan',
     date: '2022/Sep',
@@ -834,7 +834,7 @@ export const allEvents = [
   {
     id: 'typhoon-jp-mawar',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '瑪娃颱風 (Typhoon Mawar)',
     location: 'Guam & Japan',
     date: '2023/May~Jun',
@@ -860,7 +860,7 @@ export const allEvents = [
   {
     id: 'typhoon-jp-yunyeung',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '鴛鴦颱風 (Tropical Storm Yun-yeung)',
     location: 'Japan',
     date: '2023/Sep',
@@ -886,7 +886,7 @@ export const allEvents = [
   {
     id: 'typhoon-jp-shanshan',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '珊珊颱風 (Typhoon Shanshan)',
     location: 'Japan',
     date: '2024/Aug',
@@ -915,7 +915,7 @@ export const allEvents = [
   {
     id: 'typhoon-tw-karathon',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '山陀兒颱風 (Typhoon Karathon)',
     location: 'Taiwan',
     date: '2024/Oct',
@@ -945,7 +945,7 @@ export const allEvents = [
   {
     id: 'typhoon-tw-danas',
     region: 'eastAsiaTYPHOON',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: '丹娜絲颱風 (Typhoon Danas)',
     location: '台灣中南部',
     date: '2025/Jul',
@@ -970,7 +970,7 @@ export const allEvents = [
   {
     id: 'cyclone-biparjoy',
     region: 'southAsiaCYCLONE',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Cyclone Biparjoy (比頗傑氣旋)',
     location: 'Pakistan & India',
     date: '2023/Jun',
@@ -996,7 +996,7 @@ export const allEvents = [
   {
     id: 'cyclone-remal',
     region: 'southAsiaCYCLONE',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Cyclone Remal (雷馬爾氣旋)',
     location: '孟加拉、印度',
     date: '2024/May',
@@ -1022,7 +1022,7 @@ export const allEvents = [
   {
     id: 'hurricane-john',
     region: 'americaHURRI',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Hurricane John (約翰颶風)',
     location: 'southern Mexico',
     date: '2024/Sep',
@@ -1048,7 +1048,7 @@ export const allEvents = [
   {
     id: 'hurricane-francine',
     region: 'americaHURRI',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Hurricane Francine (颶風弗朗辛)',
     location: 'Louisiana, USA',
     date: '2024/Sep',
@@ -1074,7 +1074,7 @@ export const allEvents = [
   {
     id: 'hurricane-helene',
     region: 'americaHURRI',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Hurricane Helene (颶風海倫)',
     location: 'Southeastern United States',
     date: '2024/Sep',
@@ -1099,7 +1099,7 @@ export const allEvents = [
   {
     id: 'hurricane-milton',
     region: 'americaHURRI',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Hurricane Milton (米爾頓颶風)',
     location: 'Florida, USA',
     date: '2024/Oct',
@@ -1124,7 +1124,7 @@ export const allEvents = [
   {
     id: 'cyclone-DANA',
     region: 'southAsiaCYCLONE',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Cyclone DANA (達那氣旋)',
     location: '印度東岸',
     date: '2024/Oct',
@@ -1153,7 +1153,7 @@ export const allEvents = [
   {
     id: 'cyclone-fengal',
     region: 'southAsiaCYCLONE',
-    type: 'storm',
+    type: 'tropical-cyclone',
     title: 'Cyclone Fengal (氣旋豐格爾)',
     location: '印度南部、斯里蘭卡',
     date: '2024/Nov',
