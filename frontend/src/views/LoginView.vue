@@ -131,7 +131,7 @@ const handleSubmit = async () => {
 
 const handleGuestLogin = () => {
   authStore.guestLogin()
-  alert('以訪客身分進入，遊戲進度會有遺失風險，成績無法進入排行榜')
+  alert('以訪客身分進入\n1.遊戲進度會有遺失風險\n2.成績無法進入排行榜\n3.無法解鎖地圖')
   handleRedirect()
 }
 
