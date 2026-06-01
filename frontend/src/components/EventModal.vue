@@ -88,11 +88,13 @@
           <button 
             :disabled="currentIndex === 0" 
             @click="currentIndex--" 
-            class="nav-btn"
+            class="nav-btn1"
           >
-            ← PREV
+            <span class="nav-icon left">
+              <ChevronLeft :size="20" :stroke-width="3" />
+            </span>
           </button>
-        
+
           <span class="page-indicator">
             {{ (currentIndex + 1).toString().padStart(2, '0') }} / {{ events.length.toString().padStart(2, '0') }}
           </span>
@@ -100,8 +102,11 @@
           <button 
             :disabled="currentIndex === events.length - 1" 
             @click="currentIndex++" 
-            class="nav-btn1"
-          ><ChevronRight :size="21" :stroke-width="3" />
+            class="nav-btn"
+          >
+            <span class="nav-icon right">
+              <ChevronRight :size="21" :stroke-width="4" />
+            </span>
           </button>
         </div>
       </div>
@@ -449,37 +454,27 @@ onMounted(() => {
   margin-right: 16px;
 }
 
-
 /**=====翻頁區=========*/
 .pagination {   /*翻頁區div區塊*/
   display: flex;
   justify-content: space-between; 
   align-items: center;
   border-top: 0px solid #f1f5f9; 
-  margin-top: 5px; /* border線段和R&R的距離 */
-  padding-top: 5px; /* 按鈕和線段距離 */
+  margin-top: 7px; /* border線段和R&R的距離 */
+  padding-top: 10px; /* 按鈕和線段距離 */
 }
 .page-indicator {   /**頁碼*/
-  margin-top:-1px;
+  display: flex;
+  align-items: center;
   font-size: 12px;
   font-weight: 800;
   color: #64748b;
   letter-spacing: 0.2em;
-  margin-left: -10px;
-
+  margin-bottom:3px;
+  margin-left:15px;
 }
-.nav-btn {    /*PREV按鈕*/
-  background: none;
-  border: none;
-  color: #64748b;
-  font-weight: 900;
-  font-size: 11px;
-  cursor: pointer;
-  transition: color 0.2s;
-  padding: 8px 10px 8px 10px;
-}
-.nav-btn1{
-  background: #3b82f6;      /* 藍色背景 (與你的 flood 標籤同色) */
+.nav-btn, .nav-btn1 {
+  background: #3b82f6;      /* 藍色背景 */
   border: none;
   color: #ffffff;           /* 白色箭頭 */
   cursor: pointer;
@@ -490,22 +485,49 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0 0 1px;
-  margin-bottom: -2px;
-  margin-right: -2px;
+  margin: 0;
+  padding: 0;
 }
-.nav-btn1:not(:disabled):hover {
+.nav-btn{
+  margin-top :-10px;
+}
+.nav-btn1{
+  background: #ffffffe4;      /* 藍色背景 */
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-top: 2.5px;
+}
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+.nav-icon.left {
+  transform: translateY(0px);
+  color: #3e3c3c; 
+}
+.nav-icon.right {
+  transform: translateX(1px);
+}
+.nav-btn:not(:disabled):hover{
   background: #2563eb;
 }
-/* 禁用 (Disabled) 狀態：改成淺灰色底、白色箭頭，並降低不透明度 */
-.nav-btn1:disabled {
-  background: #cbd5e1;      /* 淺灰色底 */
+.nav-btn:disabled {
+  background: #cbd5e1;
   color: #ffffff;
   opacity: 0.6;
   cursor: not-allowed;
 }
-.nav-btn:disabled {   /**按鈕顏色控制*/
-  opacity: 0.2; cursor: not-allowed;}
+.nav-btn1:disabled {
+  color: #ffffff;
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+
 @media (max-width: 800px) {
   .close-btn {
   width: 33px; height: 33px; background: rgba(0, 0, 0, 0.3);
@@ -559,7 +581,7 @@ onMounted(() => {
   border-radius: 4px;
   margin-top: 1.8px;
   }
-.subtitle-tag {
+  .subtitle-tag {
   margin-top: 5px;
   font-size: 9px;         /* 調整文字大小，可以根據需要改為 12px 或 14px */
   font-weight: 400;       /* 文字加粗 */
@@ -586,14 +608,9 @@ onMounted(() => {
   margin-bottom: 13px;/* 主資料 <=> 和R&R的距離 */
  }
 
-  .pagination {   /*翻頁區div區塊*/
-  display: flex;
-  justify-content: space-between; 
-  align-items: center;
-  border-top: 0px solid #f1f5f9; 
-  margin-top: 7px; /* border線段和R&R的距離 */
-  padding-top: 7px; /* 按鈕和線段距離 */
-  margin-left: -2px;
+  .pagination {
+    margin-top: 7px;
+    padding-top: 7px;
   }
   .page-indicator {   /**頁碼*/
   margin-top:0px;
@@ -601,41 +618,19 @@ onMounted(() => {
   font-weight: 900;
   color: #64748b;
   letter-spacing: 0.2em;
-  margin-left:-3px;
-  margin-bottom:2px;
   }
-  .nav-btn {    /*NEXT按鈕*/
-  background: none;
-  border: none;
-  color: #64748b;
-  font-weight: 900;
-  font-size: 10px;
-  cursor: pointer;
-  transition: color 0.2s;
-  padding: 8px 10px 8px 10px;
+  .nav-btn,
+  .nav-btn1 {
+    width: 36px;
+    height: 36px;
   }
-  .nav-btn1{
-  background: #3b82f6;      /* 藍色背景 (與你的 flood 標籤同色) */
-  border: none;
-  color: #ffffff;           /* 白色箭頭 */
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 0 1px;
-  margin-right: -3px;
-  margin-top: -3px;
- }
-  .source-links {
+   .source-links {
   /* links之間 */
   display: flex;         /* 啟動彈性佈局 */
   flex-wrap: wrap;       /* 核心：允許內容折行 */
   width: 100%;           /* 確保撐滿寬度 */
   line-height: 1.3;
-  }
+  
+}
 }
 </style>
