@@ -10,10 +10,20 @@
       </button>
 
       <div class="nav-links" :class="{ 'is-open': isMenuOpen }">
-        <button v-on:click="handleStartMap" class="nav-item" style="margin-bottom: 3px">
+        <button
+          v-on:click="handleStartMap"
+          class="nav-item"
+          :class="{ 'router-link-active': route.path === '/map' }"
+          style="margin-bottom: 3px"
+        >
           地圖
         </button>
-        <button v-on:click="handleStartGame" class="nav-item" style="margin-bottom: 3px">
+        <button
+          v-on:click="handleStartGame"
+          class="nav-item"
+          :class="{ 'router-link-active': route.path === '/game' }"
+          style="margin-bottom: 3px"
+        >
           遊戲
         </button>
         <router-link to="/leaderboard" class="nav-item" @click="closeMenu">排行榜</router-link>
@@ -45,11 +55,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { authStore } from '../stores/user'
 
 const router = useRouter()
+const route = useRoute()
 // 新增選單開關狀態
 const isMenuOpen = ref(false)
 
