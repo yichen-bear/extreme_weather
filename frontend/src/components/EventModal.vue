@@ -88,10 +88,10 @@
           <button 
             :disabled="currentIndex === 0" 
             @click="currentIndex--" 
-            class="nav-btn1"
+            class="nav-btn"
           >
             <span class="nav-icon left">
-              <ChevronLeft :size="20" :stroke-width="3" />
+              <ChevronLeft :size="21" :stroke-width="4" />
             </span>
           </button>
 
@@ -506,8 +506,7 @@ onMounted(() => {
   line-height: 0;
 }
 .nav-icon.left {
-  transform: translateY(0px);
-  color: #3e3c3c; 
+  transform: translateX(1px);
 }
 .nav-icon.right {
   transform: translateX(1px);
