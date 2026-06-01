@@ -81,8 +81,8 @@ const lockStatus = ref({
   levelwind: false
 });
 
-// 2. 生命週期：網頁載入後自動啟動 Image Map 縮放修正
-onMounted(async () => {
+// 2. vue元件有生命週期：網頁載入後自動啟動 Image Map 縮放修正
+onMounted(async () => { // onMounted 元件出現在畫面後執行
   imageMapResize();
 
   try {
@@ -157,6 +157,10 @@ const currentRegionEvents = computed(() => {
     e.region === selectedRegion.value && e.type === currentActive.value
   );
 });
+
+// 元件生命週期 : 銷毀前，執行
+
+
 </script>
 
 <style scoped>
@@ -243,48 +247,51 @@ const currentRegionEvents = computed(() => {
 
 .map-stack {
   position: relative;
-  width: 115%;          /* 解放地圖圖片舞台 */
-  max-width: 1500px;    /* 🔑 微調最大寬度上限 */
+  display: inline-block; /* 讓外框緊貼底圖實際寬度 */
+  width: 115%;          
+  max-width: 1500px;
   line-height: 0;       
-  border-radius: 9px;   /* 完美保留妳要的圓角 */
-  overflow: hidden;     /* 🔑 強制切掉地圖原本尖尖的四個角 */
-  cursor: default;          /* 讓地圖包裹層也維持箭頭游標 */
+  border-radius: 9px;   
+  overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
 }
-
-/* 統一地圖層設定 */
-.map-layer {
+/* 2. 統一所有地圖圖層縮放骨架（不管是底圖還是上色圖） */
+.map-layer, .base-layer {
+  width: 100% !important;     /* 統一寬度表現 */
+  max-height: 82vh;     
+  object-fit: contain !important; /* 🔑 兩者必須統一使用 contain，確保縮放比例與裁切邏輯完全一致 */
+  transition: opacity 0.8s ease;
+}
+/* 只有純底圖一開始就是顯示的 */
+.base-layer {
+  position: relative;   
+  height: auto !important; 
+  opacity: 1 !important;  /* 🔑 底圖永遠可見 */
+  z-index: 0;            /* 放在最底層 */
+}
+/* 4. 上色疊圖絕對定位，且複製底圖的形狀 */
+.map-layer:not(.base-layer) {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100% !important;
-  max-height: 82vh;     /* 🔑 微調高度上限，防止 100% 縮放時上下爆框 */
-  object-fit: cover !important; /*讓點擊圖例時，兩張圖能彼此配合縮放，不要跑出兩個南極洲*/
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none; 
+  height: 100% !important; /* 絕對定位後強制與底圖一樣的高寬 */
+  opacity: 0;             /* 🔑 預設隱藏，一開始只會看到底圖 */
+  pointer-events: none;   
+  z-index: 1;
 }
-
-/* 確保底圖在大螢幕下全力放大 */
-.base-layer {
-  width: 100%;
-  height: auto;         
-  max-height: 82vh;     
-  object-fit: contain;  
-  opacity: 1;
-  position: relative;   
-  pointer-events: auto; 
-}
-
+/* 當 Vue 偵測到點擊，加上 .is-visible 時才顯示出來 */
 .map-layer.is-visible {
-  opacity: 1;
+  opacity: 1 !important;  /* 🔑 強制變回可見 */
+  z-index: 2;            /* 浮現到最上層 */
 }
 
 /* 重複定義的重複樣式清理與合併覆蓋（解決按鈕重複定義沒反應的問題） */
 .legend-item {
+  position: relative;
+  display: inline-flex; /* 或保持 flex */
+  align-items: center;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.15) !important; /* 配合妳的暗色背景 */
   margin-bottom: 0px;   /* 🔑 移除原本重複定義的 margin-bottom: 10px，避免卡片過長爆開 */
@@ -294,11 +301,11 @@ const currentRegionEvents = computed(() => {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: white;
 }
-
 .legend-item.active {
   background-color: #34495e !important; /* 升級為高階深灰藍 */
   border-color: #3498db !important;
-  font-weight: bold;
+  /* 🔑 用文字描邊模擬粗體：給它 0.5 像素與文字同色的外框 */
+  -webkit-text-stroke: 0.5px currentColor;
 }
 
 .dot {
@@ -334,7 +341,7 @@ area {
 
 
 /* ==========================================================================
-   2. ⚡ RWD 核心響應式佈局 - 視窗縮小時自動變身（完全不受大螢幕縮小影響）
+  ⚡ RWD 響應式佈局 - 視窗縮小時自動變身（完全不受大螢幕縮小影響）
    ========================================================================== */
 @media (max-width: 800px) {
   .disaster-map-container {
@@ -343,16 +350,50 @@ area {
     width: 100%;
     box-sizing: border-box;
   }
-  
   .main-content {
     flex-direction: column;   
     align-items: center;      
-    gap: 15px;                
+    gap: 0px;             
     margin: 0 auto;
     padding: 0;
     width: 100%;
   }
+
   
+  .map-area {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -35px !important;
+  }
+  .map-stack {
+    width: 95%;              
+    max-width: 650px;         
+    display: inline-block; /* 保持跟桌機一樣的包裹邏輯 */
+    border-radius: 9px !important;
+    overflow: hidden !important;
+  }
+  .base-layer, .map-layer {
+    width: 100%;              
+    max-height: 55vh !important; /* 妳滿意的高度上限 */
+    object-fit: contain !important; /* 絕對不能變 */
+    clip-path: inset(0 0 0 0 round 9px) !important;
+  }
+  .base-layer { /* vh 代表螢幕高度百分比。改成 55vh 代表地圖最多只佔螢幕高度的 55% */
+    border-radius: 9px !important;   /* 💡 讓外框擁有完美的 9px 圓角 */
+    overflow: hidden !important;
+    width: auto;
+  }
+  .map-layer:not(.base-layer) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100% !important;
+  }
+
   .sidebar {
     width: 100%;
     padding: 0;
@@ -360,17 +401,15 @@ area {
     display: flex;
     flex-direction: column; 
     align-items: center;     
-    gap: 10px;                
+    gap: 10px; /**/                
   }
-  
   .sidebar h2 {
-    margin-top: 15px;         
-    font-size: 1.25rem;       
-    margin-bottom: 0px;       
-    text-align: center;       
+    margin-top: 32px;
+    font-size: 1.3rem;
+    margin-bottom: 3px;
+    text-align: center;
     width: 100%;     
   }
-
   .legend {
     display: flex;
     margin-top: 0px;
@@ -381,17 +420,18 @@ area {
     overflow-x: auto;         
     justify-content: center;  
   }
-  
   .legend-item {
     flex: 1;               
-    min-width: 90px;
-    padding: 6px 10px !important;    
-    justify-content: center;
-    font-size: 0.75rem;
+    min-width: 120px;
+    padding: 7px 6px !important;    
+    font-size: 0.65rem;
     border-radius: 40px !important; 
     white-space: nowrap;      
   }
-
+  .lock-icon {
+    margin-left: 6px;    
+    margin-left: auto;      
+  }
   /* 🔑 1. 讓顏色方塊（.dot）也跟著視窗等比例伸縮 */
   .dot {
     height: 1.2vh !important;   /* 🔑 改用 vh 單位，隨螢幕高度縮放 */
@@ -404,117 +444,6 @@ area {
     display: inline-block;
     margin-right: 6px !important; /* 稍微縮小間距，看起來更精緻 */
     vertical-align: middle;
-  }
-
-  .lock-icon {
-    margin-left: 6px;         
-  }
-
-  /* ==========================================================================
-     🔑 2. 地圖圓角修正（將圓角直接綁定在圖片本身，解決 max-height 下圓角消失的問題）
-     ========================================================================== */
-  .map-area {
-    width: 100%;              
-    margin: 0;                
-    padding: 0;
-    display: flex;
-    justify-content: center;  
-    align-items: center;      
-  }
-
-  .map-stack {
-    position: relative;
-    width: 95%;              
-    max-width: 650px;         
-    line-height: 0;
-    
-    /* 🔑 這裡的圓角可以移除或保留，我們主要是把魔法轉移到圖片上 */
-    border-radius: 0;       
-    overflow: visible; 
-    border-radius: 9px !important;   /* 💡 讓外框擁有完美的 9px 圓角 */
-    overflow: hidden !important;
-  }
-
-  .base-layer, .map-layer {
-    width: 100%;              
-    height: auto;             
-    max-height: 50vh !important; 
-    object-fit: contain;      
-    
-    /* 🔑 終極關鍵：把圓角和切邊強制灌進圖片本尊！ */
-    /* 這樣無論地圖怎麼自己等比例放大縮小，地圖圖片的邊角都絕對是圓的！ */
-    border-radius: 0 !important;
-    overflow: visible !important;
-    clip-path: inset(0 0 0 0 round 9px) !important;
-  }
-  
-  /* 確保疊圖的圓角與位置跟底圖完全重合 */
-  .disaster-map-container {
-    padding: 10px 15px;
-    margin: auto;
-  }
-  .main-content {
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    margin: 0 auto;
-    padding: 0;
-    width: 100%;
-  }
-  .sidebar {
-    width: 100%;
-    padding: 0;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column; 
-    align-items: center;     /* 讓內容物居中 */
-    gap: 15px;
-  }
-  .sidebar h2 {
-    margin-top: 30px;
-    font-size: 1.3rem;
-    margin-bottom: 3px;
-    width: 100%;     
-  }
-
-  .legend {
-    display: flex;
-    margin-top: 0px;
-    flex-direction: row;   
-    flex-wrap: nowrap !important;       
-    gap: 12px;
-    width: 100%;
-    overflow-x: auto;  
-    max-height: 14vh;   
-  }
-  .legend-item {
-    flex: 1;               
-    min-width: 80px;
-    padding: 6px 8px !important;    
-    justify-content: center;
-    font-size: 0.7rem;
-    border-radius: 40px !important; 
-  }
-
-  .lock-icon {
-    margin-left: auto;     
-  }
-  .map-area {
-    width: auto;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: -35px !important;
-  }
-  .base-layer {
-    /* 💡 原本可能是 85vh 或 70vh，把它縮小到 55vh 或 60vh 試試看！ */
-    /* vh 代表螢幕高度百分比。改成 55vh 代表地圖最多只佔螢幕高度的 55% */
-    border-radius: 9px !important;   /* 💡 讓外框擁有完美的 9px 圓角 */
-    overflow: hidden !important;
-    width: auto;
-    object-fit: contain;  /* 確保地圖等比例縮小，絕對不變形、不拉伸 */
   }
 }
 </style>
