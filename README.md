@@ -1,12 +1,14 @@
 # Climate Ascent 氣候攀登者
 
-**[🔗 專案連結 (Live Demo)](https://extreme-weather-red.vercel.app/)**
+**<a href="https://extreme-weather-red.vercel.app/" target="_blank">🔗 專案連結 (Live Demo)</a>**
 
 **Climate Ascent** 是一個結合「極端氣候數據探索」與「體感互動遊戲」的網頁應用程式。我們以聯合國永續發展目標 **SDG 13 (Climate Action 氣候行動)** 為核心理念，邀請使用者化身氣候時代的攀登者，透過互動體驗來理解地球正在發出的警訊。
 
 ## 📸 畫面預覽 (Screenshots)
 
-![Climate Ascent 首頁](./frontend/src/assets/homepage.png)
+<a href="https://extreme-weather-red.vercel.app/" target="_blank">
+  <img src="./frontend/src/assets/homepage.png" alt="Climate Ascent 首頁" />
+</a>
 *專案首頁畫面*
 
 ## 🌟 核心功能 (Features)
@@ -68,4 +70,4 @@ extreme_weather/
 ```
 
 ## 🚀 專案連結
-馬上體驗：**[https://extreme-weather-red.vercel.app/](https://extreme-weather-red.vercel.app/)**
+馬上體驗：**<a href="https://extreme-weather-red.vercel.app/" target="_blank">https://extreme-weather-red.vercel.app/</a>**
